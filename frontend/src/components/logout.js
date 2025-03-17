@@ -1,8 +1,8 @@
 // Initialize Userfront Core JS
 
-import { Button } from '@mui/material'
-import { useContext } from 'react';
-import { UserContext } from '../contexts/user.context';
+import { Button } from "@mui/material";
+import { useContext } from "react";
+import { UserContext } from "../contexts/user.context";
 
 // Define the logout button component
 class LogoutButton extends Component {
@@ -19,7 +19,6 @@ class LogoutButton extends Component {
 
     this.handleClick = this.handleClick.bind(this);
   }
-  
 
   handleClick(event) {
     event.preventDefault();
