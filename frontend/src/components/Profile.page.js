@@ -44,6 +44,7 @@ export default function Album() {
     const getUserData = async () => {
       const fetchedUser = await fetchUser();
       setUserData(fetchedUser);
+      console.log(fetchedUser);
     };
     getUserData();
   }, [fetchUser]);
@@ -85,7 +86,10 @@ export default function Album() {
                   color="text.secondary"
                   paragraph
                 >
-                  Welcome, {userData.profile.email}
+                  Welcome, {userData.profile.name}
+                </Typography>
+                <Typography variant="h6" align="center" color="text.secondary">
+                  Email: {userData.email}
                 </Typography>
                 <Typography variant="h6" align="center" color="text.secondary">
                   User ID: {userData.id}

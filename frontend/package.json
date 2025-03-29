@@ -21,6 +21,9 @@
     "interactjs": "^1.9.10",
     "mdb-react-ui-kit": "^6.0.0",
     "mdbreact": "^5.2.0",
+    "moleculer": "^0.14.35",
+    "moleculer-web": "^0.10.8",
+    "nats": "^2.29.3",
     "rc-slider": "^10.2.0",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
@@ -31,7 +34,7 @@
     "react-range": "^1.8.14",
     "react-router-dom": "^6.11.2",
     "react-scripts": "^5.0.1",
-    "realm-web": "^1.5.1",
+    "realm-web": "^1.7.1",
     "sqlite3": "^5.1.6",
     "uuid": "^7.0.3"
   },

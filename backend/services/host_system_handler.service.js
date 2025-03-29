@@ -3,7 +3,7 @@ const { Pool } = require("pg");
 const moodle_client = require("moodle-client");
 
 const db = new Pool({
-	user: "inveniraUser",
+	user: "uutsavacharya15",
 	host: "localhost",
 	database: "inveniraBD",
 	password: "password123",

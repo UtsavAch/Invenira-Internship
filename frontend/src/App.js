@@ -31,6 +31,8 @@ import ObjectiveDetailsPage from "./components/Objective.details.page";
 import UserIapDetails from "./components/User.iap.details";
 import UserAllIaps from "./components/User.all.iaps.details";
 
+import UsersManager from "./components/UsersManager";
+
 import {
   BrowserRouter as Router,
   Route,
@@ -88,6 +90,7 @@ class App extends Component {
           <UserProvider>
             <CustomNavBar />
             <Routes>
+              <Route exact path="/usersManager" element={<UsersManager />} />
               <Route exact path="/customNavBar" element={<CustomNavBar />} />
               <Route exact path="/create-iap" element={<EditIAP />} />
               <Route exact path="/edit-iap/:id" element={<this.EditIAP />} />

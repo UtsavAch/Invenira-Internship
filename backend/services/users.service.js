@@ -9,7 +9,7 @@ module.exports = {
 	name: "users",
 	mixins: [DbService],
 	adapter: new SqlAdapter(
-		"postgres://inveniraUser:password123@db:5432/inveniraBD?schema=invenirabd",
+		"postgres://uutsavacharya15@localhost:5432/inveniraBD?schema=invenirabd",
 		{
 			schema: "invenirabd",
 			logging: false,
