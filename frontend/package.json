@@ -17,6 +17,7 @@
     "cytoscape-edgehandles": "^3.6.0",
     "dotenv": "^8.2.0",
     "emoji-picker-react": "^4.4.9",
+    "express-session": "^1.18.1",
     "html-react-parser": "^3.0.12",
     "interactjs": "^1.9.10",
     "mdb-react-ui-kit": "^6.0.0",

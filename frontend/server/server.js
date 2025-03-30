@@ -9,7 +9,6 @@ const port = 8000;
 
 const broker = new ServiceBroker({
   nodeID: "gateway",
-  // transporter: "NATS",
 });
 
 broker.loadService("../../backend/services/users.service.js");
@@ -65,7 +64,7 @@ app.get("/users/:id", async (req, res) => {
   }
 });
 
-// Update a user
+// Update the user data
 app.put("/users/:id", async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -91,42 +90,26 @@ app.delete("/users/:id", async (req, res) => {
   }
 });
 
-// Add this to your server.js
 app.post("/users/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await broker.call("users.login", { email, password });
+    // Return the full user object including ID
     res.json(user);
   } catch (error) {
     handleError(res, error);
   }
 });
 
-// // Optional: Add a /me endpoint for session persistence
-// app.get("/users/me", async (req, res) => {
-//   // You'll need to implement session handling or JWT verification here
-//   // This is just a placeholder structure
-//   try {
-//     if (!req.session || !req.session.userId) {
-//       return res.status(401).json({ error: "Not authenticated" });
-//     }
-//     const user = await broker.call("users.get", { id: req.session.userId });
-//     res.json(user);
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
-
-// Optional: Add a logout endpoint
 app.post("/users/logout", async (req, res) => {
   try {
-    // Destroy session if using session auth
-    req.session.destroy();
     res.json({ message: "Logged out successfully" });
   } catch (error) {
     handleError(res, error);
   }
 });
+
+/////////////////////////////////////
 
 // Start the server
 app.listen(port, () => {
