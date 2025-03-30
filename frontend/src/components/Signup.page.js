@@ -10,6 +10,7 @@ const Signup = () => {
   // As explained in the Login page.
   const { emailPasswordSignup } = useContext(UserContext);
   const [form, setForm] = useState({
+    name: "",
     email: "",
     password: "",
   });
@@ -29,7 +30,11 @@ const Signup = () => {
   // As explained in the Login page.
   const onSubmit = async () => {
     try {
-      const user = await emailPasswordSignup(form.email, form.password);
+      const user = await emailPasswordSignup(
+        form.name,
+        form.email,
+        form.password
+      );
       if (user) {
         redirectNow();
       }
@@ -48,6 +53,15 @@ const Signup = () => {
       }}
     >
       <h1>Signup</h1>
+      <TextField
+        label="Name"
+        type="name"
+        variant="outlined"
+        name="name"
+        value={form.name}
+        onInput={onFormInputChange}
+        style={{ marginBottom: "1rem" }}
+      />
       <TextField
         label="Email"
         type="email"

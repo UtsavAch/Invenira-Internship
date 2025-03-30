@@ -29,6 +29,7 @@ const handleError = (res, error) => {
   }
 };
 
+///////////HANDLING USERS///////////////////////
 // List all users
 app.get("/users", async (req, res) => {
   try {
@@ -85,6 +86,43 @@ app.delete("/users/:id", async (req, res) => {
   try {
     await broker.call("users.remove", { id: req.params.id });
     res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// Add this to your server.js
+app.post("/users/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await broker.call("users.login", { email, password });
+    res.json(user);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// // Optional: Add a /me endpoint for session persistence
+// app.get("/users/me", async (req, res) => {
+//   // You'll need to implement session handling or JWT verification here
+//   // This is just a placeholder structure
+//   try {
+//     if (!req.session || !req.session.userId) {
+//       return res.status(401).json({ error: "Not authenticated" });
+//     }
+//     const user = await broker.call("users.get", { id: req.session.userId });
+//     res.json(user);
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
+
+// Optional: Add a logout endpoint
+app.post("/users/logout", async (req, res) => {
+  try {
+    // Destroy session if using session auth
+    req.session.destroy();
+    res.json({ message: "Logged out successfully" });
   } catch (error) {
     handleError(res, error);
   }

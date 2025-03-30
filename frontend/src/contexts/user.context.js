@@ -1,76 +1,105 @@
 import { createContext, useState } from "react";
-import { App, Credentials } from "realm-web";
-import { APP_ID } from "../realm/constants";
 
-// Creating a Realm App Instance
-const app = new App(APP_ID);
+// Base URL for your API (adjust according to your environment)
+const API_BASE_URL = "http://localhost:8000";
 
 // Creating a user context to manage and access all the user related functions
-// across different components and pages.
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // Function to log in user into our App Service app using their email & password
+  // Function to log in user using your backend API
   const emailPasswordLogin = async (email, password) => {
-    const credentials = Credentials.emailPassword(email, password);
-    const authenticatedUser = await app.logIn(credentials);
-    setUser(authenticatedUser);
-    return authenticatedUser;
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Login failed");
+      }
+
+      const authenticatedUser = await response.json();
+      setUser(authenticatedUser);
+      return authenticatedUser;
+    } catch (error) {
+      throw error;
+    }
   };
 
-  // Function to sign up user into our App Service app using their email & password
-  const emailPasswordSignup = async (email, password) => {
+  // Function to sign up user using your backend API
+  const emailPasswordSignup = async (name, email, password) => {
     try {
-      await app.emailPasswordAuth.registerUser(email, password);
-      // Since we are automatically confirming our users, we are going to log in
-      // the user using the same credentials once the signup is complete.
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Signup failed");
+      }
+
+      const newUser = await response.json();
+
+      // Automatically log in after signup
       return emailPasswordLogin(email, password);
     } catch (error) {
       throw error;
     }
   };
 
-  // Function to fetch the user (if the user is already logged in) from local storage
+  // Function to fetch the current user
   const fetchUser = async () => {
-    if (!app.currentUser) return false;
     try {
-      await app.currentUser.refreshCustomData();
-      // Now, if we have a user, we are setting it to our user context
-      // so that we can use it in our app across different components.
-      setUser(app.currentUser);
-      return app.currentUser;
+      // You'll need to implement a /me endpoint or use your current session
+      // This is a placeholder - adjust based on your auth implementation
+      const response = await fetch(`${API_BASE_URL}/users/me`, {
+        credentials: "include", // For cookies if using session auth
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const currentUser = await response.json();
+      setUser(currentUser);
+      return currentUser;
     } catch (error) {
-      throw error;
+      console.error("Failed to fetch user", error);
+      return false;
     }
   };
 
-  // Function to logout user from our App Services app
+  // Function to logout user
   const logOutUser = async () => {
-    if (!app.currentUser) return false;
     try {
-      await app.currentUser.logOut();
-      // Setting the user to null once loggedOut.
+      // You might need a logout endpoint if using sessions
+      await fetch(`${API_BASE_URL}/users/logout`, {
+        method: "POST",
+        credentials: "include", // For cookies if using session auth
+      });
+
       setUser(null);
       return true;
     } catch (error) {
-      throw error;
+      console.error("Logout failed", error);
+      return false;
     }
   };
 
+  // Check if user is logged in
   const isUserLoggedIn = async () => {
-    try {
-      const userStatus = await app.currentUser;
-      if (userStatus == null) {
-        return false;
-      } else {
-        const userStatus = await app.currentUser.isLoggedIn;
-        return userStatus;
-      }
-    } catch (error) {
-      console.log("Failed to fetch user", error);
-    }
+    return !!user || (await fetchUser());
   };
 
   return (

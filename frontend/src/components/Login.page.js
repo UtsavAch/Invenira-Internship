@@ -5,7 +5,7 @@ import { UserContext } from "../contexts/user.context";
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
 
   // We are consuming our user-management context to
   // get & set the user details here

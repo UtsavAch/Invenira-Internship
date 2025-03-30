@@ -118,7 +118,7 @@ const UsersManager = () => {
 
       <h2 className="text-xl font-semibold mb-2">Users List</h2>
       <ul>
-        {/*users.map((user) => (
+        {users.map((user) => (
           <li
             key={user.id}
             className="border p-2 rounded mb-2 flex justify-between items-center"
@@ -146,7 +146,7 @@ const UsersManager = () => {
               </button>
             </div>
           </li>
-        ))*/}
+        ))}
       </ul>
     </div>
   );
