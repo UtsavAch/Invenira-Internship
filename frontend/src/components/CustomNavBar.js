@@ -34,7 +34,16 @@ const CustomNavBar = () => {
   };
 
   return (
-    <Navbar bg="dark" variant="dark" style={{ marginBottom: "1em" }}>
+    <Navbar
+      bg="dark"
+      variant="dark"
+      style={{
+        height: "10vh",
+        position: "sticky",
+        top: "0",
+        zIndex: "1000",
+      }}
+    >
       <Navbar.Brand href="#">Inven!RA</Navbar.Brand>
       <Nav className="mr-auto">
         <NavItem>

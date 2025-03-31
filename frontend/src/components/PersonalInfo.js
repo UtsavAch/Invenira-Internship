@@ -43,7 +43,24 @@ export default function PersonalInfo() {
   // Update name & email (requires current password)
   const handleUpdateInfo = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${user.id}`, {
+      //Verify current password using the login API
+      const loginResponse = await fetch(`${API_BASE_URL}/users/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: user.email, // Use the user's current email
+          password: formData.currentPassword, // Password entered in the form
+        }),
+      });
+
+      if (!loginResponse.ok) {
+        throw new Error("Incorrect current password. Cannot update profile.");
+      }
+
+      //Update if password is valid
+      const updateResponse = await fetch(`${API_BASE_URL}/users/${user.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -55,30 +72,46 @@ export default function PersonalInfo() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(
-          "Failed to update profile. Check your current password."
-        );
+      if (!updateResponse.ok) {
+        throw new Error("Failed to update profile.");
       }
 
-      const updatedUser = await response.json();
+      const updatedUser = await updateResponse.json();
       setUser(updatedUser);
       setEditMode(false);
     } catch (error) {
       console.error("Update error:", error);
+      alert(error.message);
     }
   };
 
   // Change password (must match current password)
   const handleChangePassword = async () => {
     try {
+      //Verify current password using login API
+      const loginResponse = await fetch(`${API_BASE_URL}/users/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: user.email, // Using email to verify
+          password: passwordData.currentPassword, // Current password entered by user
+        }),
+      });
+
+      if (!loginResponse.ok) {
+        throw new Error("Incorrect current password.");
+      }
+
+      // If verification successful, proceed with password change
       const response = await fetch(`${API_BASE_URL}/users/${user.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          password: passwordData.currentPassword, // Verify current password
+          password: passwordData.currentPassword, // Verify old password
           newPassword: passwordData.newPassword, // New password
         }),
       });
@@ -94,6 +127,7 @@ export default function PersonalInfo() {
       setPasswordData({ currentPassword: "", newPassword: "" });
     } catch (error) {
       console.error("Password update error:", error);
+      alert(error.message);
     }
   };
 
@@ -109,9 +143,7 @@ export default function PersonalInfo() {
   };
 
   return (
-    <Box
-      sx={{ p: 3, border: "1px solid #ddd", borderRadius: 2, width: "350px" }}
-    >
+    <Box sx={{ p: 3, width: "350px" }}>
       <Typography variant="h6" gutterBottom>
         Personal Info
       </Typography>
@@ -123,9 +155,6 @@ export default function PersonalInfo() {
           </Typography>
           <Typography>
             <strong>Email:</strong> {user.email}
-          </Typography>
-          <Typography>
-            <strong>Password:</strong> {user.password}
           </Typography>
 
           <Button
