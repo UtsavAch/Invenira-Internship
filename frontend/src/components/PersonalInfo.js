@@ -3,7 +3,7 @@ import { UserContext } from "../contexts/user.context";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, Button, TextField } from "@mui/material";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 export default function PersonalInfo() {
   const { user, setUser, logOutUser } = useContext(UserContext);

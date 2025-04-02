@@ -12,6 +12,7 @@ const broker = new ServiceBroker({
 });
 
 broker.loadService("../../backend/services/users.service.js");
+broker.loadService("../../backend/services/activity.service.js");
 
 // Start the broker
 broker.start().then(() => {
@@ -104,6 +105,80 @@ app.post("/users/login", async (req, res) => {
 app.post("/users/logout", async (req, res) => {
   try {
     res.json({ message: "Logged out successfully" });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+/////////////////////////////////////
+///////////HANDLING ACTIVITIES///////////////////////
+// List all activities
+app.get("/activities", async (req, res) => {
+  try {
+    const activities = await broker.call("activity.list", {
+      all: req.query.all,
+      name: req.query.name,
+    });
+    res.json(activities);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// Create a new activity
+app.post("/activities", async (req, res) => {
+  const { name, properties, config_url, json_params, user_url, analytics } =
+    req.body;
+  try {
+    const newActivity = await broker.call("activity.create", {
+      name,
+      properties,
+      config_url,
+      json_params,
+      user_url,
+      analytics,
+    });
+    res.status(201).json(newActivity);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// Get activity by ID
+app.get("/activities/:id", async (req, res) => {
+  try {
+    const activity = await broker.call("activity.get", { id: req.params.id });
+    res.json(activity);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// Update the activity data
+app.put("/activities/:id", async (req, res) => {
+  const { name, properties, config_url, json_params, user_url, analytics } =
+    req.body;
+  try {
+    const updatedActivity = await broker.call("activity.update", {
+      id: req.params.id,
+      name,
+      properties,
+      config_url,
+      json_params,
+      user_url,
+      analytics,
+    });
+    res.json(updatedActivity);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// Delete an activity
+app.delete("/activities/:id", async (req, res) => {
+  try {
+    await broker.call("activity.remove", { id: req.params.id });
+    res.json({ message: "Activity deleted successfully" });
   } catch (error) {
     handleError(res, error);
   }
