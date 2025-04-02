@@ -8,6 +8,7 @@ import {
   Modal,
   Alert,
   Spinner,
+  Badge,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -21,6 +22,19 @@ import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
+const isValidJson = (str) => {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+const formatJson = (obj) => {
+  return JSON.stringify(obj, null, 2);
+};
+
 const MyActivities = () => {
   const [activities, setActivities] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,6 +42,7 @@ const MyActivities = () => {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [currentActivity, setCurrentActivity] = useState(null);
+  const [jsonError, setJsonError] = useState(false);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -65,8 +80,26 @@ const MyActivities = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleJsonChange = (e) => {
+    const { value } = e.target;
+    try {
+      const parsed = value ? JSON.parse(value) : {};
+      setFormData((prev) => ({ ...prev, properties: parsed }));
+      setJsonError(false);
+    } catch (err) {
+      setFormData((prev) => ({ ...prev, properties: value }));
+      setJsonError(true);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (jsonError) {
+      setError("Please fix the JSON syntax errors in properties");
+      return;
+    }
+
     try {
       const url = currentActivity
         ? `${API_BASE_URL}/activities/${currentActivity.id}`
@@ -145,6 +178,8 @@ const MyActivities = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setCurrentActivity(null);
+    setJsonError(false);
+    setError(null);
   };
 
   const handleStartActivity = (id) => {
@@ -175,7 +210,12 @@ const MyActivities = () => {
       </Form.Group>
 
       {error && (
-        <Alert variant="danger" className="mb-3">
+        <Alert
+          variant="danger"
+          className="mb-3"
+          onClose={() => setError(null)}
+          dismissible
+        >
           {error}
         </Alert>
       )}
@@ -192,11 +232,25 @@ const MyActivities = () => {
                 key={activity.id}
                 className="d-flex justify-content-between align-items-center"
               >
-                <div>
+                <div style={{ maxWidth: "70%" }}>
                   <h5>{activity.name}</h5>
-                  <small className="text-muted">
-                    {activity.config_url && `Config: ${activity.config_url}`}
-                  </small>
+                  {activity.config_url && (
+                    <small className="text-muted d-block">
+                      Config: {activity.config_url}
+                    </small>
+                  )}
+                  {activity.properties &&
+                    Object.keys(activity.properties).length > 0 && (
+                      <div className="mt-2">
+                        <Badge bg="info">Properties:</Badge>
+                        <pre
+                          className="d-inline ms-2"
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          {formatJson(activity.properties)}
+                        </pre>
+                      </div>
+                    )}
                 </div>
                 <div>
                   <Button
@@ -233,8 +287,7 @@ const MyActivities = () => {
         </ListGroup>
       )}
 
-      {/* Modal for Create/Edit */}
-      <Modal show={showModal} onHide={handleCloseModal}>
+      <Modal show={showModal} onHide={handleCloseModal} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
             {currentActivity ? "Edit Activity" : "Create New Activity"}
@@ -250,6 +303,31 @@ const MyActivities = () => {
                 onChange={handleInputChange}
                 required
               />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Properties (JSON)</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={6}
+                name="properties"
+                value={
+                  typeof formData.properties === "string"
+                    ? formData.properties
+                    : formatJson(formData.properties)
+                }
+                onChange={handleJsonChange}
+                isInvalid={jsonError}
+              />
+              {jsonError && (
+                <Form.Text className="text-danger">
+                  Invalid JSON format
+                </Form.Text>
+              )}
+              <Form.Text className="text-muted">
+                Enter valid JSON (e.g., {"{"}"difficulty": "medium", "topic":
+                "math"{"}"})
+              </Form.Text>
             </Form.Group>
 
             <Form.Group className="mb-3">
@@ -292,7 +370,7 @@ const MyActivities = () => {
             <Button variant="secondary" onClick={handleCloseModal}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
+            <Button variant="primary" type="submit" disabled={jsonError}>
               {currentActivity ? "Update" : "Create"}
             </Button>
           </Modal.Footer>
