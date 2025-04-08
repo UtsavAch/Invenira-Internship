@@ -24,7 +24,7 @@ export const UserProvider = ({ children }) => {
 
       const authenticatedUser = await response.json();
       setUser(authenticatedUser);
-      return authenticatedUser;
+      console.log(authenticatedUser);
     } catch (error) {
       throw error;
     }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Container,
   Navbar,
@@ -18,6 +18,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import ActivityFormModal from "./ActivityFormModal";
+import { UserContext } from "../contexts/user.context";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -29,6 +30,7 @@ const MyActivities = () => {
   const [showModal, setShowModal] = useState(false);
   const [currentActivity, setCurrentActivity] = useState(null);
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -40,10 +42,26 @@ const MyActivities = () => {
   });
 
   useEffect(() => {
+    // const fetchActivities = async () => {
+    //   try {
+    //     setLoading(true);
+    //     const response = await fetch(`${API_BASE_URL}/activities?all=true`);
+    //     const data = await response.json();
+    //     setActivities(data);
+    //     setLoading(false);
+    //   } catch (err) {
+    //     setError("Failed to fetch activities");
+    //     setLoading(false);
+    //   }
+    // };
+
     const fetchActivities = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/activities?all=true`);
+        const url = user
+          ? `${API_BASE_URL}/activities?user_id=${user.id}`
+          : `${API_BASE_URL}/activities?all=true`;
+        const response = await fetch(url);
         const data = await response.json();
         setActivities(data);
         setLoading(false);
@@ -54,7 +72,7 @@ const MyActivities = () => {
     };
 
     fetchActivities();
-  }, []);
+  }, [user]);
 
   const filteredActivities = activities.filter((activity) =>
     activity.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -68,10 +86,14 @@ const MyActivities = () => {
 
       const method = currentActivity ? "PUT" : "POST";
 
+      const body = currentActivity
+        ? formData
+        : { ...formData, user_id: user?.id };
+
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData), // Use passed formData
+        body: JSON.stringify(body), // Use passed formData
       });
 
       if (!response.ok) throw new Error("Operation failed");
