@@ -13,13 +13,13 @@ const IapFormModal = ({
   const [keyValuePairs, setKeyValuePairs] = useState([]);
   const [jsonError, setJsonError] = useState("");
 
-  // useEffect(() => {
-  //   setLocalFormData(initialFormData);
-  //   const pairs = Object.entries(initialFormData.properties || {}).map(
-  //     ([key, value]) => ({ key, value })
-  //   );
-  //   setKeyValuePairs(pairs);
-  // }, [initialFormData]);
+  useEffect(() => {
+    setLocalFormData(initialFormData);
+    const pairs = Object.entries(initialFormData.properties || {}).map(
+      ([key, value]) => ({ key, value })
+    );
+    setKeyValuePairs(pairs);
+  }, [initialFormData]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

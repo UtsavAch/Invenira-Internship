@@ -53,6 +53,7 @@ const MyActivities = () => {
         const response = await fetch(
           `${API_BASE_URL}/activities?user_id=${user.id}`
         );
+        // const response = await fetch(`${API_BASE_URL}/activities?all=true`);
         const data = await response.json();
         setActivities(data);
         setLoading(false);
