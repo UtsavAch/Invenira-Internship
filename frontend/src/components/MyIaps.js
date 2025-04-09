@@ -60,12 +60,6 @@ const MyIaps = () => {
 
   const handleSubmit = async (formData) => {
     try {
-      const parsedData = {
-        ...formData,
-        nodes: JSON.parse(formData.nodes),
-        edges: JSON.parse(formData.edges),
-      };
-
       const url = currentIap
         ? `${API_BASE_URL}/iaps/${currentIap.id}`
         : `${API_BASE_URL}/iaps`;
@@ -75,7 +69,7 @@ const MyIaps = () => {
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsedData),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) throw new Error("Operation failed");
@@ -135,12 +129,20 @@ const MyIaps = () => {
     setError(null);
   };
 
+  const handleDeployIap = (id) => {
+    navigate(`/deploy-iap/${id}`);
+  };
+
   return (
     <Container className="mt-4">
       <Navbar bg="light" className="mb-4 p-3 rounded">
         <Navbar.Brand>IAPs</Navbar.Brand>
         <Button variant="primary" onClick={handleCreate} className="ms-auto">
-          <FontAwesomeIcon icon={faPlus} className="me-2" />
+          <FontAwesomeIcon
+            icon={faPlus}
+            className="me-2"
+            style={{ marginRight: "10px" }}
+          />
           Create IAP
         </Button>
       </Navbar>
@@ -155,50 +157,80 @@ const MyIaps = () => {
             placeholder="Search IAPs..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: "calc(100% - 30px)" }}
+            className="me-2"
           />
-          <FontAwesomeIcon icon={faSearch} className="text-muted" />
+          <FontAwesomeIcon
+            icon={faSearch}
+            className="text-muted"
+            style={{ fontSize: "1.5rem" }}
+          />
         </div>
       </Form.Group>
 
       {error && (
-        <Alert variant="danger" dismissible>
+        <Alert
+          variant="danger"
+          className="mb-3"
+          onClose={() => setError(null)}
+          dismissible
+        >
           {error}
         </Alert>
       )}
 
       {loading ? (
-        <Spinner animation="border" />
+        <div className="text-center">
+          <Spinner animation="border" />
+        </div>
       ) : (
         <ListGroup>
-          {filteredIaps.map((iap) => (
-            <ListGroup.Item
-              key={iap.id}
-              className="d-flex justify-content-between"
-            >
-              <div>
-                <h5>{iap.name}</h5>
-                <small className="text-muted">
-                  Nodes: {iap.nodes?.length || 0}
-                </small>
-              </div>
-              <div>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => handleEdit(iap)}
-                >
-                  <FontAwesomeIcon icon={faEdit} />
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => handleDelete(iap.id)}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
-              </div>
+          {filteredIaps.length > 0 ? (
+            filteredIaps.map((iap) => (
+              <ListGroup.Item
+                key={iap.id}
+                className="d-flex justify-content-between align-items-center"
+              >
+                <div style={{ maxWidth: "70%" }}>
+                  <h5>{iap.name}</h5>
+                  {iap.properties && (
+                    <small className="text-muted d-block">
+                      {Object.keys(iap.properties).length} properties
+                    </small>
+                  )}
+                </div>
+                <div>
+                  <Button
+                    variant="success"
+                    size="sm"
+                    className="me-2"
+                    onClick={() => handleDeployIap(iap.id)}
+                  >
+                    <FontAwesomeIcon icon={faPlay} />
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="me-2"
+                    onClick={() => handleEdit(iap)}
+                  >
+                    <FontAwesomeIcon icon={faEdit} />
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleDelete(iap.id)}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
+                </div>
+              </ListGroup.Item>
+            ))
+          ) : (
+            <ListGroup.Item className="text-center">
+              No IAPs found
             </ListGroup.Item>
-          ))}
+          )}
         </ListGroup>
       )}
 

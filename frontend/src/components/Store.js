@@ -7,6 +7,7 @@ import {
   ListGroup,
   Alert,
   Spinner,
+  Card,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faPlay } from "@fortawesome/free-solid-svg-icons";
@@ -15,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const Store = () => {
+  const [iaps, setIaps] = useState([]);
   const [activities, setActivities] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -22,21 +24,34 @@ const Store = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchActivities = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/activities?all=true`);
-        const data = await response.json();
-        setActivities(data);
+
+        // Fetch both IAPs and Activities in parallel
+        const [iapsResponse, activitiesResponse] = await Promise.all([
+          fetch(`${API_BASE_URL}/iaps?all=true`),
+          fetch(`${API_BASE_URL}/activities?all=true`),
+        ]);
+
+        const iapsData = await iapsResponse.json();
+        const activitiesData = await activitiesResponse.json();
+
+        setIaps(iapsData);
+        setActivities(activitiesData);
         setLoading(false);
       } catch (err) {
-        setError("Failed to fetch activities");
+        setError("Failed to fetch data");
         setLoading(false);
       }
     };
 
-    fetchActivities();
+    fetchData();
   }, []);
+
+  const filteredIaps = iaps.filter((iap) =>
+    iap.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const filteredActivities = activities.filter((activity) =>
     activity.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -44,6 +59,10 @@ const Store = () => {
 
   const handleStartActivity = (id) => {
     navigate(`/start-activity/${id}`);
+  };
+
+  const handleStartIap = (id) => {
+    navigate(`/deploy-iap/${id}`);
   };
 
   return (
@@ -66,7 +85,7 @@ const Store = () => {
         >
           <Form.Control
             type="text"
-            placeholder="Search activities..."
+            placeholder="Search IAPs and Activities..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ width: "calc(100% - 30px)" }}
@@ -96,38 +115,85 @@ const Store = () => {
           <Spinner animation="border" />
         </div>
       ) : (
-        <ListGroup>
-          {filteredActivities.length > 0 ? (
-            filteredActivities.map((activity) => (
-              <ListGroup.Item
-                key={activity.id}
-                className="d-flex justify-content-between align-items-center"
-              >
-                <div style={{ maxWidth: "70%" }}>
-                  <h5>{activity.name}</h5>
-                  {activity.config_url && (
-                    <small className="text-muted d-block">
-                      Config: {activity.config_url}
-                    </small>
-                  )}
-                </div>
-                <div>
-                  <Button
-                    variant="success"
-                    size="sm"
-                    onClick={() => handleStartActivity(activity.id)}
-                  >
-                    <FontAwesomeIcon icon={faPlay} />
-                  </Button>
-                </div>
-              </ListGroup.Item>
-            ))
-          ) : (
-            <ListGroup.Item className="text-center">
-              No activities found
-            </ListGroup.Item>
-          )}
-        </ListGroup>
+        <>
+          {/* IAPs Section */}
+          <Card className="mb-4">
+            <Card.Header as="h5">IAPs</Card.Header>
+            <Card.Body>
+              <ListGroup>
+                {filteredIaps.length > 0 ? (
+                  filteredIaps.map((iap) => (
+                    <ListGroup.Item
+                      key={iap.id}
+                      className="d-flex justify-content-between align-items-center"
+                    >
+                      <div style={{ maxWidth: "70%" }}>
+                        <h5>{iap.name}</h5>
+                        {iap.properties && (
+                          <small className="text-muted d-block">
+                            Properties: {JSON.stringify(iap.properties)}
+                          </small>
+                        )}
+                      </div>
+                      <div>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleStartIap(iap.id)}
+                        >
+                          <FontAwesomeIcon icon={faPlay} />
+                        </Button>
+                      </div>
+                    </ListGroup.Item>
+                  ))
+                ) : (
+                  <ListGroup.Item className="text-center">
+                    No IAPs found
+                  </ListGroup.Item>
+                )}
+              </ListGroup>
+            </Card.Body>
+          </Card>
+
+          {/* Activities Section */}
+          <Card>
+            <Card.Header as="h5">Activities</Card.Header>
+            <Card.Body>
+              <ListGroup>
+                {filteredActivities.length > 0 ? (
+                  filteredActivities.map((activity) => (
+                    <ListGroup.Item
+                      key={activity.id}
+                      className="d-flex justify-content-between align-items-center"
+                    >
+                      <div style={{ maxWidth: "70%" }}>
+                        <h5>{activity.name}</h5>
+                        {activity.config_url && (
+                          <small className="text-muted d-block">
+                            Config: {activity.config_url}
+                          </small>
+                        )}
+                      </div>
+                      <div>
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={() => handleStartActivity(activity.id)}
+                        >
+                          <FontAwesomeIcon icon={faPlay} />
+                        </Button>
+                      </div>
+                    </ListGroup.Item>
+                  ))
+                ) : (
+                  <ListGroup.Item className="text-center">
+                    No activities found
+                  </ListGroup.Item>
+                )}
+              </ListGroup>
+            </Card.Body>
+          </Card>
+        </>
       )}
     </Container>
   );

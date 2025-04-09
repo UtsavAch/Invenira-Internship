@@ -192,6 +192,7 @@ app.delete("/activities/:id", async (req, res) => {
     handleError(res, error);
   }
 });
+
 /////////////////////////////////////
 ///////////HANDLING IAPS///////////////////////
 // List all IAPs
