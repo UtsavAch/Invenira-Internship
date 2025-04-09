@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Navbar, Nav, NavItem } from "react-bootstrap";
-import Iaps from "./components/iaps";
 import Activities from "./components/activities";
 import ActivityAnalytics from "./components/activity_analytics";
 import IAPAnalytics from "./components/iap_analytics";
@@ -14,7 +13,7 @@ import StartActivity from "./components/StartActivity";
 import { UserProvider } from "./contexts/user.context";
 import Home from "./components/Home.page";
 import Login from "./components/Login.page";
-import PrivateRoute from "./components/PrivateRoute.page";
+// import PrivateRoute from "./components/PrivateRoute.page";
 import Signup from "./components/Signup.page";
 import CustomNavBar from "./components/CustomNavBar";
 import { UserContext } from "./contexts/user.context";
@@ -30,6 +29,7 @@ import UserObjectiveDetails from "./components/User.objective.details";
 import ObjectiveDetailsPage from "./components/Objective.details.page";
 import UserIapDetails from "./components/User.iap.details";
 import UserAllIaps from "./components/User.all.iaps.details";
+import Store from "./components/Store";
 
 import UsersManager from "./components/UsersManager";
 
@@ -91,18 +91,19 @@ class App extends Component {
             <CustomNavBar />
             <Routes>
               <Route exact path="/usersManager" element={<UsersManager />} />
+              <Route exact path="/" element={<Home />} />
               <Route exact path="/customNavBar" element={<CustomNavBar />} />
               <Route exact path="/create-iap" element={<EditIAP />} />
               <Route exact path="/edit-iap/:id" element={<this.EditIAP />} />
               <Route exact path="/live-iaps" element={<MyIaps />} />
               <Route exact path="/activities" element={<MyActivities />} />
+              <Route exact path="/store" element={<Store />} />
               <Route
                 exact
                 path="/act-analytics/1"
                 element={<this.LoadActivityAnalytics />}
               />
               <Route path="/iap-analytics/:id" element={<this.Analitics />} />
-              <Route exact path="/" element={<Iaps />} />
 
               <Route
                 exact
@@ -154,7 +155,7 @@ class App extends Component {
 
               {/* We are protecting our Home Page from unauthenticated */}
               {/* users by wrapping it with PrivateRoute here. Put private pages here*/}
-              <Route element={<PrivateRoute />}></Route>
+              {/* <Route element={<PrivateRoute />}></Route> */}
             </Routes>
           </UserProvider>
         </div>

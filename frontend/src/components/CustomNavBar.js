@@ -44,10 +44,42 @@ const CustomNavBar = () => {
         zIndex: "1000",
       }}
     >
-      <Navbar.Brand href="#">Inven!RA</Navbar.Brand>
+      {isLoggedIn ? (
+        <>
+          <Navbar.Brand>
+            <Link
+              to="/store"
+              style={{
+                textDecoration: "none",
+                fontWeight: "bold",
+                fontSize: "1.5rem",
+                color: "#fff",
+              }}
+            >
+              Inven!RA
+            </Link>
+          </Navbar.Brand>
+        </>
+      ) : (
+        <>
+          <Navbar.Brand>
+            <Link
+              to="/"
+              style={{
+                textDecoration: "none",
+                fontWeight: "bold",
+                fontSize: "1.5rem",
+                color: "#fff",
+              }}
+            >
+              Inven!RA
+            </Link>
+          </Navbar.Brand>
+        </>
+      )}
       <Nav className="mr-auto">
         <NavItem>
-          <Link to="/">Store</Link>
+          <Link to="/store">Store</Link>
         </NavItem>
         {isLoggedIn && (
           <>
