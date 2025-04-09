@@ -49,34 +49,6 @@ module.exports = {
 		 * @param {Object} Activity - Activity details. Name is mandatory
 		 * @returns {Object} Created entity + id
 		 */
-		// async create(ctx) {
-		// 	const {
-		// 		name,
-		// 		properties,
-		// 		config_url,
-		// 		json_params,
-		// 		user_url,
-		// 		analytics,
-		// 		user_id,
-		// 	} = ctx.params;
-		// 	try {
-		// 		const activity = await this.adapter.model.create({
-		// 			name,
-		// 			properties,
-		// 			config_url,
-		// 			json_params,
-		// 			user_url,
-		// 			analytics,
-		// 		}); //insert
-		// 		return activity;
-		// 	} catch (error) {
-		// 		throw new MoleculerError(
-		// 			"Failed to create activity: " + error.message,
-		// 			500
-		// 		);
-		// 	}
-		// },
-		// activity.service.js
 		async create(ctx) {
 			const {
 				name,
@@ -118,23 +90,6 @@ module.exports = {
 		 * @param {String} id - Activity ID
 		 * @returns
 		 */
-		// async remove(ctx) {
-		// 	try {
-		// 		const activity = await this.adapter.model.findOne({
-		// 			where: { id: ctx.params.id },
-		// 		});
-		// 		if (!activity) {
-		// 			throw new MoleculerError("Activity not found", 404);
-		// 		}
-		// 		await activity.destroy();
-		// 		return;
-		// 	} catch (error) {
-		// 		throw new MoleculerError(
-		// 			"Failed to delete activity: " + error.message,
-		// 			500
-		// 		);
-		// 	}
-		// },
 		async remove(ctx) {
 			const { id, user_id } = ctx.params;
 			try {
@@ -170,39 +125,6 @@ module.exports = {
 		 * @param {Object} Activity - Activity details. Name is mandatory
 		 * @returns {Object} Activity
 		 */
-		// async update(ctx) {
-		// 	const {
-		// 		name,
-		// 		properties,
-		// 		config_url,
-		// 		json_params,
-		// 		user_url,
-		// 		analytics,
-		// 		id,
-		// 	} = ctx.params;
-		// 	try {
-		// 		const activity = await this.adapter.model.findOne({
-		// 			where: { id },
-		// 		});
-		// 		if (!activity) {
-		// 			throw new MoleculerError("Activity not found", 404);
-		// 		}
-		// 		await activity.update({
-		// 			name,
-		// 			properties,
-		// 			config_url,
-		// 			json_params,
-		// 			user_url,
-		// 			analytics,
-		// 		});
-		// 		return activity;
-		// 	} catch (error) {
-		// 		throw new MoleculerError(
-		// 			"Failed to update activity: " + error.message,
-		// 			500
-		// 		);
-		// 	}
-		// },
 		async update(ctx) {
 			const { id, user_id, ...updateData } = ctx.params;
 			try {
@@ -262,22 +184,6 @@ module.exports = {
 		 * @actions
 		 * @returns {Array} List of available Activities
 		 */
-		// async list(ctx) {
-		// 	const { all, name } = ctx.params;
-		// 	if (all) {
-		// 		const activities = await this.adapter.model.findAll();
-		// 		return activities;
-		// 	} else {
-		// 		const activities = await this.adapter.model.findAll({
-		// 			where: {
-		// 				name: {
-		// 					[Sequelize.Op.iLike]: `%${name}%`,
-		// 				},
-		// 			},
-		// 		});
-		// 		return activities;
-		// 	}
-		// },
 		async list(ctx) {
 			const { all, name, user_id } = ctx.params;
 			if (all) {

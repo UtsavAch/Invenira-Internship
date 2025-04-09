@@ -42,26 +42,17 @@ const MyActivities = () => {
   });
 
   useEffect(() => {
-    // const fetchActivities = async () => {
-    //   try {
-    //     setLoading(true);
-    //     const response = await fetch(`${API_BASE_URL}/activities?all=true`);
-    //     const data = await response.json();
-    //     setActivities(data);
-    //     setLoading(false);
-    //   } catch (err) {
-    //     setError("Failed to fetch activities");
-    //     setLoading(false);
-    //   }
-    // };
-
     const fetchActivities = async () => {
       try {
         setLoading(true);
-        const url = user
-          ? `${API_BASE_URL}/activities?user_id=${user.id}`
-          : `${API_BASE_URL}/activities?all=true`;
-        const response = await fetch(url);
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(
+          `${API_BASE_URL}/activities?user_id=${user.id}`
+        );
         const data = await response.json();
         setActivities(data);
         setLoading(false);
@@ -113,20 +104,6 @@ const MyActivities = () => {
       setError(err.message);
     }
   };
-
-  // const handleDelete = async (id) => {
-  //   try {
-  //     const response = await fetch(`${API_BASE_URL}/activities/${id}`, {
-  //       method: "DELETE",
-  //     });
-
-  //     if (!response.ok) throw new Error("Delete failed");
-
-  //     setActivities(activities.filter((activity) => activity.id !== id));
-  //   } catch (err) {
-  //     setError(err.message);
-  //   }
-  // };
 
   const handleDelete = async (id) => {
     try {
@@ -189,101 +166,111 @@ const MyActivities = () => {
     <Container className="mt-4">
       <Navbar bg="light" className="mb-4 p-3 rounded">
         <Navbar.Brand>Activities</Navbar.Brand>
-        <Button variant="primary" onClick={handleCreate} className="ms-auto">
-          <FontAwesomeIcon
-            icon={faPlus}
-            className="me-2"
-            style={{ marginRight: "10px" }}
-          />
-          Create Activity
-        </Button>
+        {user && (
+          <Button variant="primary" onClick={handleCreate} className="ms-auto">
+            <FontAwesomeIcon
+              icon={faPlus}
+              className="me-2"
+              style={{ marginRight: "10px" }}
+            />
+            Create Activity
+          </Button>
+        )}
       </Navbar>
 
-      <Form.Group className="mb-4">
-        <div
-          className="d-flex align-items-center"
-          style={{ width: "500px", gap: "30px" }}
-        >
-          <Form.Control
-            type="text"
-            placeholder="Search activities..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: "calc(100% - 30px)" }} /* Makes room for icon */
-            className="me-2" /* Adds right margin */
-          />
-          <FontAwesomeIcon
-            icon={faSearch}
-            className="text-muted"
-            style={{ fontSize: "1.5rem" }}
-          />
-        </div>
-      </Form.Group>
-
-      {error && (
-        <Alert
-          variant="danger"
-          className="mb-3"
-          onClose={() => setError(null)}
-          dismissible
-        >
-          {error}
+      {!user ? (
+        <Alert variant="info" className="text-center">
+          You need to login to see, create and update your activities
         </Alert>
-      )}
-
-      {loading ? (
-        <div className="text-center">
-          <Spinner animation="border" />
-        </div>
       ) : (
-        <ListGroup>
-          {filteredActivities.length > 0 ? (
-            filteredActivities.map((activity) => (
-              <ListGroup.Item
-                key={activity.id}
-                className="d-flex justify-content-between align-items-center"
-              >
-                <div style={{ maxWidth: "70%" }}>
-                  <h5>{activity.name}</h5>
-                  {activity.config_url && (
-                    <small className="text-muted d-block">
-                      Config: {activity.config_url}
-                    </small>
-                  )}
-                </div>
-                <div>
-                  <Button
-                    variant="success"
-                    size="sm"
-                    className="me-2"
-                    onClick={() => handleStartActivity(activity.id)}
-                  >
-                    <FontAwesomeIcon icon={faPlay} />
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="me-2"
-                    onClick={() => handleEdit(activity)}
-                  >
-                    <FontAwesomeIcon icon={faEdit} />
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDelete(activity.id)}
-                  >
-                    <FontAwesomeIcon icon={faTrash} />
-                  </Button>
-                </div>
-              </ListGroup.Item>
-            ))
-          ) : (
-            <ListGroup.Item className="text-center">
-              No activities found
-            </ListGroup.Item>
+        <>
+          <Form.Group className="mb-4">
+            <div
+              className="d-flex align-items-center"
+              style={{ width: "500px", gap: "30px" }}
+            >
+              <Form.Control
+                type="text"
+                placeholder="Search activities..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ width: "calc(100% - 30px)" }}
+                className="me-2"
+              />
+              <FontAwesomeIcon
+                icon={faSearch}
+                className="text-muted"
+                style={{ fontSize: "1.5rem" }}
+              />
+            </div>
+          </Form.Group>
+
+          {error && (
+            <Alert
+              variant="danger"
+              className="mb-3"
+              onClose={() => setError(null)}
+              dismissible
+            >
+              {error}
+            </Alert>
           )}
-        </ListGroup>
+
+          {loading ? (
+            <div className="text-center">
+              <Spinner animation="border" />
+            </div>
+          ) : (
+            <ListGroup>
+              {filteredActivities.length > 0 ? (
+                filteredActivities.map((activity) => (
+                  <ListGroup.Item
+                    key={activity.id}
+                    className="d-flex justify-content-between align-items-center"
+                  >
+                    <div style={{ maxWidth: "70%" }}>
+                      <h5>{activity.name}</h5>
+                      {activity.config_url && (
+                        <small className="text-muted d-block">
+                          Config: {activity.config_url}
+                        </small>
+                      )}
+                    </div>
+                    <div>
+                      <Button
+                        variant="success"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => handleStartActivity(activity.id)}
+                      >
+                        <FontAwesomeIcon icon={faPlay} />
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => handleEdit(activity)}
+                      >
+                        <FontAwesomeIcon icon={faEdit} />
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleDelete(activity.id)}
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </Button>
+                    </div>
+                  </ListGroup.Item>
+                ))
+              ) : (
+                <ListGroup.Item className="text-center">
+                  No activities found
+                </ListGroup.Item>
+              )}
+            </ListGroup>
+          )}
+        </>
       )}
 
       <ActivityFormModal

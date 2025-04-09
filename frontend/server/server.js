@@ -127,37 +127,7 @@ app.get("/activities", async (req, res) => {
   }
 });
 
-// app.get("/activities", async (req, res) => {
-//   try {
-//     const activities = await broker.call("activity.list", {
-//       all: req.query.all,
-//       name: req.query.name,
-//     });
-//     res.json(activities);
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
-
 // Create a new activity
-// app.post("/activities", async (req, res) => {
-//   const { name, properties, config_url, json_params, user_url, analytics } =
-//     req.body;
-//   try {
-//     const newActivity = await broker.call("activity.create", {
-//       name,
-//       properties,
-//       config_url,
-//       json_params,
-//       user_url,
-//       analytics,
-//     });
-//     res.status(201).json(newActivity);
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
-
 app.post("/activities", async (req, res) => {
   const {
     name,
@@ -195,27 +165,8 @@ app.get("/activities/:id", async (req, res) => {
 });
 
 // Update the activity data
-// app.put("/activities/:id", async (req, res) => {
-//   const { name, properties, config_url, json_params, user_url, analytics } =
-//     req.body;
-//   try {
-//     const updatedActivity = await broker.call("activity.update", {
-//       id: req.params.id,
-//       name,
-//       properties,
-//       config_url,
-//       json_params,
-//       user_url,
-//       analytics,
-//     });
-//     res.json(updatedActivity);
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
-
 app.put("/activities/:id", async (req, res) => {
-  const { user_id, ...updateData } = req.body; // Get user_id from auth middleware
+  const { user_id, ...updateData } = req.body; // Get user_id
   try {
     const updatedActivity = await broker.call("activity.update", {
       id: req.params.id,
@@ -228,18 +179,9 @@ app.put("/activities/:id", async (req, res) => {
   }
 });
 
-// Delete an activity
-// app.delete("/activities/:id", async (req, res) => {
-//   try {
-//     await broker.call("activity.remove", { id: req.params.id });
-//     res.json({ message: "Activity deleted successfully" });
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
 // Delete activity
 app.delete("/activities/:id", async (req, res) => {
-  const { user_id } = req.body; // Get user_id from auth middleware
+  const { user_id } = req.body; // Get user_id
   try {
     await broker.call("activity.remove", {
       id: req.params.id,
