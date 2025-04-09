@@ -16,7 +16,6 @@ import Login from "./components/Login.page";
 // import PrivateRoute from "./components/PrivateRoute.page";
 import Signup from "./components/Signup.page";
 import CustomNavBar from "./components/CustomNavBar";
-import { UserContext } from "./contexts/user.context";
 import Profile from "./components/Profile.page";
 import MyIaps from "./components/MyIaps";
 import MyActivities from "./components/MyActivities";
@@ -37,7 +36,6 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Link,
   useParams,
 } from "react-router-dom";
 
@@ -95,7 +93,7 @@ class App extends Component {
               <Route exact path="/customNavBar" element={<CustomNavBar />} />
               <Route exact path="/create-iap" element={<EditIAP />} />
               <Route exact path="/edit-iap/:id" element={<this.EditIAP />} />
-              <Route exact path="/live-iaps" element={<MyIaps />} />
+              <Route exact path="/iaps" element={<MyIaps />} />
               <Route exact path="/activities" element={<MyActivities />} />
               <Route exact path="/store" element={<Store />} />
               <Route
@@ -114,8 +112,6 @@ class App extends Component {
               <Route exact path="/login" element={<Login />} />
               <Route exact path="/signup" element={<Signup />} />
               <Route exact path="/profile" element={<Profile />} />
-              <Route exact path="/myIaps" element={<MyIaps />} />
-              <Route exact path="/myActivities" element={<MyActivities />} />
               <Route
                 exact
                 path="/iapActivityDetails/:id"

@@ -195,70 +195,70 @@ app.delete("/activities/:id", async (req, res) => {
 /////////////////////////////////////
 ///////////HANDLING IAPS///////////////////////
 // List all IAPs
-// app.get("/iaps", async (req, res) => {
-//   try {
-//     const iaps = await broker.call("iap.list", {
-//       all: req.query.all,
-//       name: req.query.name,
-//     });
-//     res.json(iaps);
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
+app.get("/iaps", async (req, res) => {
+  try {
+    const iaps = await broker.call("iap.list", {
+      all: req.query.all,
+      name: req.query.name,
+    });
+    res.json(iaps);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
 
-// // Create a new IAP
-// app.post("/iaps", async (req, res) => {
-//   const { name, properties, nodes, edges } = req.body;
-//   try {
-//     const newIap = await broker.call("iap.create", {
-//       name,
-//       properties,
-//       nodes,
-//       edges,
-//     });
-//     res.status(201).json(newIap);
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
+// Create a new IAP
+app.post("/iaps", async (req, res) => {
+  const { name, properties, nodes, edges } = req.body;
+  try {
+    const newIap = await broker.call("iap.create", {
+      name,
+      properties,
+      nodes,
+      edges,
+    });
+    res.status(201).json(newIap);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
 
-// // Get IAP by ID
-// app.get("/iaps/:id", async (req, res) => {
-//   try {
-//     const iap = await broker.call("iap.get", { id: req.params.id });
-//     res.json(iap);
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
+// Get IAP by ID
+app.get("/iaps/:id", async (req, res) => {
+  try {
+    const iap = await broker.call("iap.get", { id: req.params.id });
+    res.json(iap);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
 
-// // Update IAP
-// app.put("/iaps/:id", async (req, res) => {
-//   const { name, properties, nodes, edges } = req.body;
-//   try {
-//     const updatedIap = await broker.call("iap.update", {
-//       id: req.params.id,
-//       name,
-//       properties,
-//       nodes,
-//       edges,
-//     });
-//     res.json(updatedIap);
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
+// Update IAP
+app.put("/iaps/:id", async (req, res) => {
+  const { name, properties, nodes, edges } = req.body;
+  try {
+    const updatedIap = await broker.call("iap.update", {
+      id: req.params.id,
+      name,
+      properties,
+      nodes,
+      edges,
+    });
+    res.json(updatedIap);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
 
-// // Delete IAP
-// app.delete("/iaps/:id", async (req, res) => {
-//   try {
-//     await broker.call("iap.remove", { id: req.params.id });
-//     res.json({ message: "IAP deleted successfully" });
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
+// Delete IAP
+app.delete("/iaps/:id", async (req, res) => {
+  try {
+    await broker.call("iap.remove", { id: req.params.id });
+    res.json({ message: "IAP deleted successfully" });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
 
 /////////////////////////////////////////////////////
 

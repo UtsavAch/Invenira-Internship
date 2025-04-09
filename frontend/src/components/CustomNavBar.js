@@ -56,7 +56,7 @@ const CustomNavBar = () => {
                 color: "#fff",
               }}
             >
-              Inven!RA
+              ActHub
             </Link>
           </Navbar.Brand>
         </>
@@ -72,7 +72,7 @@ const CustomNavBar = () => {
                 color: "#fff",
               }}
             >
-              Inven!RA
+              ActHub
             </Link>
           </Navbar.Brand>
         </>
@@ -84,7 +84,7 @@ const CustomNavBar = () => {
         {isLoggedIn && (
           <>
             <NavItem>
-              <Link to="/live-iaps">My IAPs</Link>
+              <Link to="/iaps">My IAPs</Link>
             </NavItem>
             <NavItem>
               <Link to="/activities">My Activities</Link>
