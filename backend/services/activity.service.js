@@ -118,21 +118,49 @@ module.exports = {
 		 * @param {String} id - Activity ID
 		 * @returns
 		 */
+		// async remove(ctx) {
+		// 	try {
+		// 		const activity = await this.adapter.model.findOne({
+		// 			where: { id: ctx.params.id },
+		// 		});
+		// 		if (!activity) {
+		// 			throw new MoleculerError("Activity not found", 404);
+		// 		}
+		// 		await activity.destroy();
+		// 		return;
+		// 	} catch (error) {
+		// 		throw new MoleculerError(
+		// 			"Failed to delete activity: " + error.message,
+		// 			500
+		// 		);
+		// 	}
+		// },
 		async remove(ctx) {
+			const { id, user_id } = ctx.params;
 			try {
-				const activity = await this.adapter.model.findOne({
-					where: { id: ctx.params.id },
-				});
-				if (!activity) {
-					throw new MoleculerError("Activity not found", 404);
+				// 1. Check ownership first
+				const [ownership] = await this.adapter.db.query(
+					`SELECT 1 FROM "invenirabd".users_activities 
+				 WHERE users_id = ${user_id} AND activity_id = ${id}`
+				);
+
+				if (ownership.length === 0) {
+					throw new MoleculerError(
+						"Unauthorized: Not the activity owner",
+						403
+					);
 				}
-				await activity.destroy();
+
+				// 2. Delete from users_activities first
+				await this.adapter.db.query(
+					`DELETE FROM "invenirabd".users_activities WHERE activity_id = ${id}`
+				);
+
+				// 3. Then delete the activity
+				await this.adapter.model.destroy({ where: { id } });
 				return;
 			} catch (error) {
-				throw new MoleculerError(
-					"Failed to delete activity: " + error.message,
-					500
-				);
+				throw new MoleculerError(error.message, error.code || 500);
 			}
 		},
 		/**
@@ -142,37 +170,67 @@ module.exports = {
 		 * @param {Object} Activity - Activity details. Name is mandatory
 		 * @returns {Object} Activity
 		 */
+		// async update(ctx) {
+		// 	const {
+		// 		name,
+		// 		properties,
+		// 		config_url,
+		// 		json_params,
+		// 		user_url,
+		// 		analytics,
+		// 		id,
+		// 	} = ctx.params;
+		// 	try {
+		// 		const activity = await this.adapter.model.findOne({
+		// 			where: { id },
+		// 		});
+		// 		if (!activity) {
+		// 			throw new MoleculerError("Activity not found", 404);
+		// 		}
+		// 		await activity.update({
+		// 			name,
+		// 			properties,
+		// 			config_url,
+		// 			json_params,
+		// 			user_url,
+		// 			analytics,
+		// 		});
+		// 		return activity;
+		// 	} catch (error) {
+		// 		throw new MoleculerError(
+		// 			"Failed to update activity: " + error.message,
+		// 			500
+		// 		);
+		// 	}
+		// },
 		async update(ctx) {
-			const {
-				name,
-				properties,
-				config_url,
-				json_params,
-				user_url,
-				analytics,
-				id,
-			} = ctx.params;
+			const { id, user_id, ...updateData } = ctx.params;
 			try {
+				// 1. Find the activity
 				const activity = await this.adapter.model.findOne({
 					where: { id },
 				});
-				if (!activity) {
+				if (!activity)
 					throw new MoleculerError("Activity not found", 404);
+
+				// 2. Check ownership via users_activities table
+				const [ownership] = await this.adapter.db.query(
+					`SELECT 1 FROM "invenirabd".users_activities 
+				 WHERE users_id = ${user_id} AND activity_id = ${id}`
+				);
+
+				if (ownership.length === 0) {
+					throw new MoleculerError(
+						"Unauthorized: Not the activity owner",
+						403
+					);
 				}
-				await activity.update({
-					name,
-					properties,
-					config_url,
-					json_params,
-					user_url,
-					analytics,
-				});
+
+				// 3. Proceed with update
+				await activity.update(updateData);
 				return activity;
 			} catch (error) {
-				throw new MoleculerError(
-					"Failed to update activity: " + error.message,
-					500
-				);
+				throw new MoleculerError(error.message, error.code || 500);
 			}
 		},
 		/**
@@ -228,9 +286,9 @@ module.exports = {
 				// Raw query to get user's activities
 				const [results] = await this.adapter.db.query(
 					`SELECT a.* 
-   FROM "invenirabd".activities a
-   JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
-   WHERE ua.users_id = ${user_id}`
+					FROM "invenirabd".activities a
+					JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
+					WHERE ua.users_id = ${user_id}`
 				);
 				return results;
 			} else {

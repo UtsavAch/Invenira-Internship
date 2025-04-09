@@ -86,9 +86,7 @@ const MyActivities = () => {
 
       const method = currentActivity ? "PUT" : "POST";
 
-      const body = currentActivity
-        ? formData
-        : { ...formData, user_id: user?.id };
+      const body = { ...formData, user_id: user?.id };
 
       const response = await fetch(url, {
         method,
@@ -116,13 +114,34 @@ const MyActivities = () => {
     }
   };
 
+  // const handleDelete = async (id) => {
+  //   try {
+  //     const response = await fetch(`${API_BASE_URL}/activities/${id}`, {
+  //       method: "DELETE",
+  //     });
+
+  //     if (!response.ok) throw new Error("Delete failed");
+
+  //     setActivities(activities.filter((activity) => activity.id !== id));
+  //   } catch (err) {
+  //     setError(err.message);
+  //   }
+  // };
+
   const handleDelete = async (id) => {
     try {
       const response = await fetch(`${API_BASE_URL}/activities/${id}`, {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id: user?.id }), // Include user ID
       });
 
-      if (!response.ok) throw new Error("Delete failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Delete failed");
+      }
 
       setActivities(activities.filter((activity) => activity.id !== id));
     } catch (err) {

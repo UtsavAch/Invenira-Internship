@@ -195,18 +195,32 @@ app.get("/activities/:id", async (req, res) => {
 });
 
 // Update the activity data
+// app.put("/activities/:id", async (req, res) => {
+//   const { name, properties, config_url, json_params, user_url, analytics } =
+//     req.body;
+//   try {
+//     const updatedActivity = await broker.call("activity.update", {
+//       id: req.params.id,
+//       name,
+//       properties,
+//       config_url,
+//       json_params,
+//       user_url,
+//       analytics,
+//     });
+//     res.json(updatedActivity);
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
+
 app.put("/activities/:id", async (req, res) => {
-  const { name, properties, config_url, json_params, user_url, analytics } =
-    req.body;
+  const { user_id, ...updateData } = req.body; // Get user_id from auth middleware
   try {
     const updatedActivity = await broker.call("activity.update", {
       id: req.params.id,
-      name,
-      properties,
-      config_url,
-      json_params,
-      user_url,
-      analytics,
+      user_id, // Pass authenticated user's ID
+      ...updateData,
     });
     res.json(updatedActivity);
   } catch (error) {
@@ -215,15 +229,27 @@ app.put("/activities/:id", async (req, res) => {
 });
 
 // Delete an activity
+// app.delete("/activities/:id", async (req, res) => {
+//   try {
+//     await broker.call("activity.remove", { id: req.params.id });
+//     res.json({ message: "Activity deleted successfully" });
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
+// Delete activity
 app.delete("/activities/:id", async (req, res) => {
+  const { user_id } = req.body; // Get user_id from auth middleware
   try {
-    await broker.call("activity.remove", { id: req.params.id });
+    await broker.call("activity.remove", {
+      id: req.params.id,
+      user_id, // Pass authenticated user's ID
+    });
     res.json({ message: "Activity deleted successfully" });
   } catch (error) {
     handleError(res, error);
   }
 });
-
 /////////////////////////////////////
 ///////////HANDLING IAPS///////////////////////
 // List all IAPs
