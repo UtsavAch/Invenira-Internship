@@ -122,20 +122,39 @@ module.exports = {
 
 		async remove(ctx) {
 			const { id } = ctx.params;
+			try {
+				// 1. Find the user
+				const user = await this.adapter.model.findOne({
+					where: { id },
+				});
+				if (!user) {
+					throw new MoleculerError("User not found", 404);
+				}
 
-			// Busca o usuário pelo ID
-			const userDelete = await this.adapter.model.findOne({
-				where: { id },
-			});
-			if (!userDelete) {
-				throw new MoleculerError("User not found", 404);
+				// 2. Delete all user's activities and relationships
+				// Get all user's activity relationships
+				const [userActivities] = await this.adapter.db.query(
+					`SELECT activity_id FROM "invenirabd".users_activities WHERE users_id = ${id}`
+				);
+
+				// Delete each activity using the broker call
+				for (const ua of userActivities) {
+					await ctx.call("activity.remove", {
+						id: ua.activity_id,
+						user_id: id,
+					});
+				}
+
+				// 3. Delete the user
+				await user.destroy();
+
+				return { message: "User deleted successfully" };
+			} catch (error) {
+				throw new MoleculerError(
+					"Failed to delete user: " + error.message,
+					error.code || 500
+				);
 			}
-
-			// Deleta o usuário
-			await userDelete.destroy();
-
-			// Retorna uma mensagem de sucesso
-			return { message: "User deleted successfully" };
 		},
 	},
 };
