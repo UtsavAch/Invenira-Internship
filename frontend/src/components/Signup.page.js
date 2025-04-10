@@ -1,14 +1,13 @@
 import { Button, TextField } from "@mui/material";
 import { useContext, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/user.context";
 
 const Signup = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   // As explained in the Login page.
-  const { emailPasswordSignup } = useContext(UserContext);
+  const { emailPasswordSignup, emailPasswordLogin } = useContext(UserContext);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -21,25 +20,16 @@ const Signup = () => {
     setForm({ ...form, [name]: value });
   };
 
-  // As explained in the Login page.
-  const redirectNow = () => {
-    const redirectTo = location.search.replace("?redirectTo=", "");
-    navigate(redirectTo ? redirectTo : "/");
-  };
-
-  // As explained in the Login page.
-  const onSubmit = async () => {
+  const onSubmit = async (event) => {
+    event.preventDefault();
     try {
-      const user = await emailPasswordSignup(
-        form.name,
-        form.email,
-        form.password
-      );
-      if (user) {
-        redirectNow();
-      }
+      // Sign up the user
+      await emailPasswordSignup(form.name, form.email, form.password);
+      // Log in the user with the same credentials
+      await emailPasswordLogin(form.email, form.password);
+      navigate("/profile");
     } catch (error) {
-      alert(error);
+      alert(error.message || "Signup failed. Please try again.");
     }
   };
 

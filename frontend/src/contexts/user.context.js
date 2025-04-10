@@ -24,7 +24,6 @@ export const UserProvider = ({ children }) => {
 
       const authenticatedUser = await response.json();
       setUser(authenticatedUser);
-      console.log(authenticatedUser);
     } catch (error) {
       throw error;
     }
@@ -56,7 +55,6 @@ export const UserProvider = ({ children }) => {
   const fetchUser = async () => {
     // First check if we have a user in memory
     if (user) return user;
-
     // If no user in memory, return null (no persistent session)
     return null;
   };
