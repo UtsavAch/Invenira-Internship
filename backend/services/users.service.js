@@ -131,13 +131,30 @@ module.exports = {
 					throw new MoleculerError("User not found", 404);
 				}
 
-				// 2. Delete all user's activities and relationships
-				// Get all user's activity relationships
+				// 2. Get all IAPs owned by the user
+				const [ownedIaps] = await this.adapter.db.query(
+					`SELECT iap_id FROM "invenirabd".iap_ownership WHERE users_id = ${id} AND is_owner = TRUE`
+				);
+
+				// 3. Delete each owned IAP using the iap service
+				for (const iap of ownedIaps) {
+					await ctx.call("iap.remove", {
+						id: iap.iap_id,
+						user_id: id,
+					});
+				}
+
+				// 4. Delete all remaining IAP ownership relationships (where user is not owner)
+				await this.adapter.db.query(
+					`DELETE FROM "invenirabd".iap_ownership WHERE users_id = ${id}`
+				);
+
+				// 5. Get all user's activity relationships
 				const [userActivities] = await this.adapter.db.query(
 					`SELECT activity_id FROM "invenirabd".users_activities WHERE users_id = ${id}`
 				);
 
-				// Delete each activity using the broker call
+				// 6. Delete each activity using the broker call
 				for (const ua of userActivities) {
 					await ctx.call("activity.remove", {
 						id: ua.activity_id,
@@ -145,7 +162,7 @@ module.exports = {
 					});
 				}
 
-				// 3. Delete the user
+				// 7. Delete the user
 				await user.destroy();
 
 				return { message: "User deleted successfully" };
