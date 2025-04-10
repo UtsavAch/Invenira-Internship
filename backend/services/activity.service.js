@@ -95,7 +95,7 @@ module.exports = {
 			try {
 				// 1. Check ownership first
 				const [ownership] = await this.adapter.db.query(
-					`SELECT 1 FROM "invenirabd".users_activities 
+					`SELECT 1 FROM "invenirabd".users_activities
 				 WHERE users_id = ${user_id} AND activity_id = ${id}`
 				);
 
@@ -118,6 +118,24 @@ module.exports = {
 				throw new MoleculerError(error.message, error.code || 500);
 			}
 		},
+		// async remove(ctx) {
+		// 	try {
+		// 		const activity = await this.adapter.model.findOne({
+		// 			where: { id: ctx.params.id },
+		// 		});
+		// 		if (!activity) {
+		// 			throw new MoleculerError("Activity not found", 404);
+		// 		}
+		// 		await activity.destroy();
+		// 		return;
+		// 	} catch (error) {
+		// 		throw new MoleculerError(
+		// 			"Failed to delete activity: " + error.message,
+		// 			500
+		// 		);
+		// 	}
+		// },
+
 		/**
 		 * Update an activity
 		 *

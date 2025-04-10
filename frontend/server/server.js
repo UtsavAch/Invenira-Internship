@@ -193,6 +193,15 @@ app.delete("/activities/:id", async (req, res) => {
   }
 });
 
+// app.delete("/activities/:id", async (req, res) => {
+//   try {
+//     await broker.call("activity.remove", { id: req.params.id });
+//     res.json({ message: "Activity deleted successfully" });
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
+
 /////////////////////////////////////
 ///////////HANDLING IAPS///////////////////////
 // List all IAPs
@@ -264,6 +273,15 @@ app.delete("/iaps/:id", async (req, res) => {
     handleError(res, error);
   }
 });
+
+// app.delete("/iaps/:id", async (req, res) => {
+//   try {
+//     await broker.call("iap.remove", { id: req.params.id });
+//     res.json({ message: "IAP deleted successfully" });
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
 
 /////////////////////////////////////////////////////
 

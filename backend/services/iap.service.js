@@ -125,7 +125,7 @@ module.exports = {
 			try {
 				// Check ownership
 				const [ownership] = await this.adapter.db.query(
-					`SELECT 1 FROM invenirabd.iap_ownership 
+					`SELECT 1 FROM invenirabd.iap_ownership
 				 WHERE users_id = ${user_id} AND iap_id = ${id} AND is_owner = TRUE`
 				);
 				if (ownership.length === 0) {
@@ -150,5 +150,15 @@ module.exports = {
 				);
 			}
 		},
+		// async remove(ctx) {
+		// 	const iap = await this.adapter.model.findOne({
+		// 		where: { id: ctx.params.id },
+		// 	});
+		// 	if (!iap) {
+		// 		throw new MoleculerError("IAP not found", 404);
+		// 	}
+		// 	await iap.destroy();
+		// 	return iap;
+		// },
 	},
 };
