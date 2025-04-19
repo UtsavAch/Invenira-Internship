@@ -77,7 +77,7 @@ module.exports = {
 				// 		}
 				// 	});
 				// });
-				deployURL = "http://localhost:3002/";
+				let deployURL = "http://localhost:3002/";
 				const iap = await this.adapter.model.create({
 					name,
 					properties,

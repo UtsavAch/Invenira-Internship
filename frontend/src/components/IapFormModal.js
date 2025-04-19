@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Form, Button, Alert } from "react-bootstrap";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const IapFormModal = ({
   show,
   onHide,
@@ -12,6 +14,8 @@ const IapFormModal = ({
   const [localFormData, setLocalFormData] = useState(initialFormData);
   const [keyValuePairs, setKeyValuePairs] = useState([]);
   const [jsonError, setJsonError] = useState("");
+  const [activities, setActivities] = useState([]);
+  const [selectedActivityIds, setSelectedActivityIds] = useState({});
 
   useEffect(() => {
     setLocalFormData(initialFormData);
@@ -19,7 +23,29 @@ const IapFormModal = ({
       ([key, value]) => ({ key, value })
     );
     setKeyValuePairs(pairs);
-  }, [initialFormData]);
+
+    // If there are existing nodes (activities) in edit mode, pre-select them
+    if (currentIap && currentIap.nodes) {
+      setSelectedActivityIds(currentIap.nodes);
+    } else {
+      setSelectedActivityIds({});
+    }
+  }, [initialFormData, currentIap]);
+
+  // Fetch activities to populate the dropdown
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/activities?all=true`);
+        const data = await response.json();
+        setActivities(data);
+      } catch (error) {
+        console.error("Failed to fetch activities:", error);
+        // Consider setting an error state to display a message to the user
+      }
+    };
+    fetchActivities();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,30 +82,34 @@ const IapFormModal = ({
     updatePairsAndProperties(newPairs);
   };
 
-  const validateJSON = (value) => {
-    try {
-      JSON.parse(value);
-      setJsonError("");
-      return true;
-    } catch (error) {
-      setJsonError("Invalid JSON format");
-      return false;
+  const handleActivityChange = (activityId, checked) => {
+    if (checked) {
+      // Find the activity name based on activityId
+      const activityName =
+        activities.find((a) => a.id === activityId)?.name ||
+        `activity_${activityId}`;
+      setSelectedActivityIds((prevIds) => ({
+        ...prevIds,
+        [activityName]: activityId,
+      }));
+    } else {
+      // Remove the activity from selectedActivityIds
+      const updatedIds = { ...selectedActivityIds };
+      const activityNameToRemove = Object.keys(updatedIds).find(
+        (key) => updatedIds[key] === activityId
+      );
+      if (activityNameToRemove) {
+        delete updatedIds[activityNameToRemove];
+      }
+      setSelectedActivityIds(updatedIds);
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (
-      !validateJSON(localFormData.nodes) ||
-      !validateJSON(localFormData.edges)
-    ) {
-      return;
-    }
-
     onSubmit({
       ...localFormData,
-      nodes: JSON.parse(localFormData.nodes),
+      nodes: selectedActivityIds,
       edges: JSON.parse(localFormData.edges),
     });
   };
@@ -139,18 +169,28 @@ const IapFormModal = ({
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Nodes (JSON array)</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                name="nodes"
-                value={localFormData.nodes}
-                onChange={handleInputChange}
-                isInvalid={!!jsonError}
-              />
-              <Form.Control.Feedback type="invalid">
-                {jsonError}
-              </Form.Control.Feedback>
+              <Form.Label>Nodes (Activities)</Form.Label>
+              <div
+                className="border p-2 rounded"
+                style={{ maxHeight: "150px", overflowY: "auto" }}
+              >
+                {activities.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="d-flex align-items-center mb-2"
+                  >
+                    <Form.Check
+                      type="checkbox"
+                      id={`activity-checkbox-${activity.id}`}
+                      label={activity.name}
+                      checked={!!selectedActivityIds[activity.name]}
+                      onChange={(e) =>
+                        handleActivityChange(activity.id, e.target.checked)
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
             </Form.Group>
 
             <Form.Group className="mb-3">

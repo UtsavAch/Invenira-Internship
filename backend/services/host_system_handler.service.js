@@ -51,7 +51,8 @@ module.exports = {
 					this.logger.info(
 						"Create user: " + JSON.stringify(ctx.params)
 					);
-					const query = `INSERT INTO users (lms_std_id, iap) VALUES ($1, $2) RETURNING *`;
+					const query =
+						"INSERT INTO users (lms_std_id, iap) VALUES ($1, $2) RETURNING *";
 					const values = [lmsStdId, iap];
 					const result = await db.query(query, values);
 					return result.rows[0];
@@ -80,7 +81,8 @@ module.exports = {
 				try {
 					const { lmsStdId, iap } = ctx.params;
 					this.logger.info("Search by USER ID: " + lmsStdId);
-					const query = `SELECT * FROM users WHERE lms_std_id = $1 AND iap = $2`;
+					const query =
+						"SELECT * FROM users WHERE lms_std_id = $1 AND iap = $2";
 					const result = await db.query(query, [lmsStdId, iap]);
 					return result.rows[0] || {};
 				} catch (error) {
