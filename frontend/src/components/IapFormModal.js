@@ -26,7 +26,12 @@ const IapFormModal = ({
 
     // If there are existing nodes (activities) in edit mode, pre-select them
     if (currentIap && currentIap.nodes) {
-      setSelectedActivityIds(currentIap.nodes);
+      // Reverse key-value pairs when loading existing nodes
+      const reversedNodes = {};
+      for (const key in currentIap.nodes) {
+        reversedNodes[currentIap.nodes[key]] = key; // id: name
+      }
+      setSelectedActivityIds(reversedNodes);
     } else {
       setSelectedActivityIds({});
     }
@@ -82,25 +87,29 @@ const IapFormModal = ({
     updatePairsAndProperties(newPairs);
   };
 
+  const validateJSON = (value) => {
+    try {
+      JSON.parse(value);
+      setJsonError("");
+      return true;
+    } catch (error) {
+      setJsonError("Invalid JSON format");
+      return false;
+    }
+  };
+
   const handleActivityChange = (activityId, checked) => {
+    const activityName =
+      activities.find((a) => a.id === activityId)?.name ||
+      `activity_${activityId}`;
     if (checked) {
-      // Find the activity name based on activityId
-      const activityName =
-        activities.find((a) => a.id === activityId)?.name ||
-        `activity_${activityId}`;
       setSelectedActivityIds((prevIds) => ({
         ...prevIds,
-        [activityName]: activityId,
+        [activityId]: activityName, // Store id:name
       }));
     } else {
-      // Remove the activity from selectedActivityIds
       const updatedIds = { ...selectedActivityIds };
-      const activityNameToRemove = Object.keys(updatedIds).find(
-        (key) => updatedIds[key] === activityId
-      );
-      if (activityNameToRemove) {
-        delete updatedIds[activityNameToRemove];
-      }
+      delete updatedIds[activityId]; // Remove by ID
       setSelectedActivityIds(updatedIds);
     }
   };
@@ -109,7 +118,7 @@ const IapFormModal = ({
     e.preventDefault();
     onSubmit({
       ...localFormData,
-      nodes: selectedActivityIds,
+      nodes: selectedActivityIds, // Pass the id:name object
       edges: JSON.parse(localFormData.edges),
     });
   };
@@ -183,7 +192,7 @@ const IapFormModal = ({
                       type="checkbox"
                       id={`activity-checkbox-${activity.id}`}
                       label={activity.name}
-                      checked={!!selectedActivityIds[activity.name]}
+                      checked={!!selectedActivityIds[activity.id]} // Check by ID
                       onChange={(e) =>
                         handleActivityChange(activity.id, e.target.checked)
                       }
