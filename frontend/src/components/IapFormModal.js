@@ -1,6 +1,6 @@
-// IapFormModal.js
 import React, { useState, useEffect } from "react";
-import { Modal, Form, Button, Alert } from "react-bootstrap";
+import { Modal, Form, Button } from "react-bootstrap";
+import { ArrowUp, ArrowDown } from "react-bootstrap-icons";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -13,9 +13,8 @@ const IapFormModal = ({
 }) => {
   const [localFormData, setLocalFormData] = useState(initialFormData);
   const [keyValuePairs, setKeyValuePairs] = useState([]);
-  const [jsonError, setJsonError] = useState("");
   const [activities, setActivities] = useState([]);
-  const [selectedActivityIds, setSelectedActivityIds] = useState({});
+  const [orderedActivityIds, setOrderedActivityIds] = useState([]);
 
   useEffect(() => {
     setLocalFormData(initialFormData);
@@ -24,20 +23,14 @@ const IapFormModal = ({
     );
     setKeyValuePairs(pairs);
 
-    // If there are existing nodes (activities) in edit mode, pre-select them
-    if (currentIap && currentIap.nodes) {
-      // Reverse key-value pairs when loading existing nodes
-      const reversedNodes = {};
-      for (const key in currentIap.nodes) {
-        reversedNodes[currentIap.nodes[key]] = key; // id: name
-      }
-      setSelectedActivityIds(reversedNodes);
+    if (currentIap?.nodes) {
+      const initialIds = currentIap.nodes.map((node) => node.id);
+      setOrderedActivityIds(initialIds);
     } else {
-      setSelectedActivityIds({});
+      setOrderedActivityIds([]);
     }
   }, [initialFormData, currentIap]);
 
-  // Fetch activities to populate the dropdown
   useEffect(() => {
     const fetchActivities = async () => {
       try {
@@ -46,7 +39,6 @@ const IapFormModal = ({
         setActivities(data);
       } catch (error) {
         console.error("Failed to fetch activities:", error);
-        // Consider setting an error state to display a message to the user
       }
     };
     fetchActivities();
@@ -87,39 +79,57 @@ const IapFormModal = ({
     updatePairsAndProperties(newPairs);
   };
 
-  const validateJSON = (value) => {
-    try {
-      JSON.parse(value);
-      setJsonError("");
-      return true;
-    } catch (error) {
-      setJsonError("Invalid JSON format");
-      return false;
+  const handleActivityChange = (activityId, checked) => {
+    if (checked) {
+      setOrderedActivityIds((prev) => [...prev, activityId]);
+    } else {
+      setOrderedActivityIds((prev) => prev.filter((id) => id !== activityId));
     }
   };
 
-  const handleActivityChange = (activityId, checked) => {
-    const activityName =
-      activities.find((a) => a.id === activityId)?.name ||
-      `activity_${activityId}`;
-    if (checked) {
-      setSelectedActivityIds((prevIds) => ({
-        ...prevIds,
-        [activityId]: activityName, // Store id:name
-      }));
-    } else {
-      const updatedIds = { ...selectedActivityIds };
-      delete updatedIds[activityId]; // Remove by ID
-      setSelectedActivityIds(updatedIds);
-    }
+  const moveActivity = (activityId, direction) => {
+    setOrderedActivityIds((prevIds) => {
+      const currentIndex = prevIds.indexOf(activityId);
+      if (
+        (direction === "up" && currentIndex > 0) ||
+        (direction === "down" && currentIndex < prevIds.length - 1)
+      ) {
+        const newIds = [...prevIds];
+        const swapIndex =
+          direction === "up" ? currentIndex - 1 : currentIndex + 1;
+        [newIds[currentIndex], newIds[swapIndex]] = [
+          newIds[swapIndex],
+          newIds[currentIndex],
+        ];
+        return newIds;
+      }
+      return prevIds;
+    });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const nodes = orderedActivityIds.map((activityId) => ({
+      id: activityId,
+      name:
+        activities.find((a) => a.id === activityId)?.name ||
+        `activity_${activityId}`,
+    }));
+
+    const edges = orderedActivityIds.slice(0, -1).map((currentId, index) => {
+      const nextId = orderedActivityIds[index + 1];
+      return {
+        source: currentId,
+        target: nextId,
+        label: "not-completed",
+      };
+    });
+
     onSubmit({
       ...localFormData,
-      nodes: selectedActivityIds, // Pass the id:name object
-      edges: JSON.parse(localFormData.edges),
+      nodes,
+      edges,
     });
   };
 
@@ -192,7 +202,7 @@ const IapFormModal = ({
                       type="checkbox"
                       id={`activity-checkbox-${activity.id}`}
                       label={activity.name}
-                      checked={!!selectedActivityIds[activity.id]} // Check by ID
+                      checked={orderedActivityIds.includes(activity.id)}
                       onChange={(e) =>
                         handleActivityChange(activity.id, e.target.checked)
                       }
@@ -203,27 +213,54 @@ const IapFormModal = ({
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Edges (JSON array)</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                name="edges"
-                value={localFormData.edges}
-                onChange={handleInputChange}
-                isInvalid={!!jsonError}
-              />
-              <Form.Control.Feedback type="invalid">
-                {jsonError}
-              </Form.Control.Feedback>
+              <Form.Label>Edges (Activity Order)</Form.Label>
+              <div
+                className="border p-2 rounded"
+                style={{ maxHeight: "150px", overflowY: "auto" }}
+              >
+                {orderedActivityIds.length > 0 ? (
+                  <ul className="list-group">
+                    {orderedActivityIds.map((activityId, index) => {
+                      const activityName =
+                        activities.find((a) => a.id === activityId)?.name ||
+                        `Activity ${activityId}`;
+                      return (
+                        <li
+                          key={activityId}
+                          className="list-group-item d-flex justify-content-between align-items-center"
+                        >
+                          {activityName}
+                          <div>
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              onClick={() => moveActivity(activityId, "up")}
+                              disabled={index === 0}
+                              className="me-1"
+                            >
+                              <ArrowUp size={16} />
+                            </Button>
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              onClick={() => moveActivity(activityId, "down")}
+                              disabled={index === orderedActivityIds.length - 1}
+                            >
+                              <ArrowDown size={16} />
+                            </Button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <p className="text-muted">Select the activities first.</p>
+                )}
+              </div>
             </Form.Group>
           </div>
 
           <div className="mt-auto pt-3 border-top">
-            {jsonError && (
-              <Alert variant="danger" className="mb-3">
-                {jsonError}
-              </Alert>
-            )}
             <div className="d-flex justify-content-end gap-2">
               <Button variant="secondary" onClick={onHide}>
                 Cancel
