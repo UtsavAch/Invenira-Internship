@@ -26,7 +26,7 @@ module.exports = {
 	model: {
 		name: "activity_connections",
 		schema: "invenirabd",
-		timestamps: false, // This should disable timestamps
+		timestamps: false,
 		createdAt: null,
 		updatedAt: null,
 		define: {
@@ -44,7 +44,6 @@ module.exports = {
 			},
 			label: Sequelize.STRING,
 		},
-		// Add these options to ensure timestamps are completely disabled
 	},
 
 	actions: {
@@ -105,7 +104,7 @@ module.exports = {
 							{ target: activity_id },
 						],
 					},
-					raw: true, // Return plain objects instead of model instances
+					raw: true,
 				});
 			} catch (error) {
 				throw new MoleculerError(
