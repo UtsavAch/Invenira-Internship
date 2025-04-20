@@ -44,12 +44,12 @@ const MyIaps = () => {
       try {
         setLoading(true);
         const response = await fetch(`${API_BASE_URL}/iaps?user_id=${user.id}`);
-        // const response = await fetch(`${API_BASE_URL}/iaps?all=true`);
         const data = await response.json();
-        setIaps(data);
+        setIaps(Array.isArray(data) ? data : []);
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch IAPs");
+        setIaps([]); // Set empty array on error
         setLoading(false);
       }
     };
@@ -57,9 +57,12 @@ const MyIaps = () => {
     fetchIaps();
   }, [user]);
 
-  const filteredIaps = iaps.filter((iap) =>
-    iap.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredIaps = Array.isArray(iaps)
+    ? iaps.filter(
+        (iap) =>
+          iap.name && iap.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   const handleSubmit = async (formData) => {
     try {
@@ -69,7 +72,7 @@ const MyIaps = () => {
 
       const method = currentIap ? "PUT" : "POST";
 
-      const body = { ...formData, user_id: user?.id };
+      const body = { ...formData, user_id: user.id };
 
       const response = await fetch(url, {
         method,

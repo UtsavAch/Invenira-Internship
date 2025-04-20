@@ -11,6 +11,7 @@ const broker = new ServiceBroker({
   nodeID: "gateway",
 });
 
+broker.loadService("../../backend/services/activity_connections.service.js");
 broker.loadService("../../backend/services/users.service.js");
 broker.loadService("../../backend/services/activity.service.js");
 broker.loadService("../../backend/services/iap.service.js");
@@ -193,15 +194,6 @@ app.delete("/activities/:id", async (req, res) => {
   }
 });
 
-// app.delete("/activities/:id", async (req, res) => {
-//   try {
-//     await broker.call("activity.remove", { id: req.params.id });
-//     res.json({ message: "Activity deleted successfully" });
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
-
 /////////////////////////////////////
 ///////////HANDLING IAPS///////////////////////
 // List all IAPs
@@ -212,7 +204,7 @@ app.get("/iaps", async (req, res) => {
       name: req.query.name,
       user_id: req.query.user_id,
     });
-    res.json(iaps);
+    res.json(Array.isArray(iaps) ? iaps : []);
   } catch (error) {
     handleError(res, error);
   }
@@ -282,6 +274,15 @@ app.delete("/iaps/:id", async (req, res) => {
 //     handleError(res, error);
 //   }
 // });
+
+app.get("/activity-connections", async (req, res) => {
+  try {
+    const connections = await broker.call("activity_connections.list");
+    res.json(connections);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
 
 /////////////////////////////////////////////////////
 

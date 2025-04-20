@@ -93,12 +93,11 @@ module.exports = {
 		async remove(ctx) {
 			const { id, user_id } = ctx.params;
 			try {
-				// 1. Check ownership first
+				// Ownership check
 				const [ownership] = await this.adapter.db.query(
-					`SELECT 1 FROM "invenirabd".users_activities
-				 WHERE users_id = ${user_id} AND activity_id = ${id}`
+					`SELECT 1 FROM "invenirabd".users_activities 
+					 WHERE users_id = ${user_id} AND activity_id = ${id}`
 				);
-
 				if (ownership.length === 0) {
 					throw new MoleculerError(
 						"Unauthorized: Not the activity owner",
@@ -106,35 +105,29 @@ module.exports = {
 					);
 				}
 
-				// 2. Delete from users_activities first
+				// Connection check
+				const connections = await ctx.call(
+					"activity_connections.getByActivity",
+					{ activity_id: id }
+				);
+				if (connections.length > 0) {
+					throw new MoleculerError(
+						"Activity is used in IAP connections and cannot be deleted",
+						400
+					);
+				}
+
+				// Delete from users_activities and activities
 				await this.adapter.db.query(
 					`DELETE FROM "invenirabd".users_activities WHERE activity_id = ${id}`
 				);
-
-				// 3. Then delete the activity
 				await this.adapter.model.destroy({ where: { id } });
+
 				return;
 			} catch (error) {
 				throw new MoleculerError(error.message, error.code || 500);
 			}
 		},
-		// async remove(ctx) {
-		// 	try {
-		// 		const activity = await this.adapter.model.findOne({
-		// 			where: { id: ctx.params.id },
-		// 		});
-		// 		if (!activity) {
-		// 			throw new MoleculerError("Activity not found", 404);
-		// 		}
-		// 		await activity.destroy();
-		// 		return;
-		// 	} catch (error) {
-		// 		throw new MoleculerError(
-		// 			"Failed to delete activity: " + error.message,
-		// 			500
-		// 		);
-		// 	}
-		// },
 
 		/**
 		 * Update an activity

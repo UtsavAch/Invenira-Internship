@@ -113,12 +113,18 @@ const MyActivities = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ user_id: user?.id }), // Include user ID
+        body: JSON.stringify({ user_id: user?.id }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Delete failed");
+        if (errorData.error.includes("cannot be deleted")) {
+          // Handle case where activity is in use
+          setError("Cannot delete: Activity is used in an IAP");
+        } else {
+          throw new Error(errorData.error || "Delete failed");
+        }
+        return;
       }
 
       setActivities(activities.filter((activity) => activity.id !== id));

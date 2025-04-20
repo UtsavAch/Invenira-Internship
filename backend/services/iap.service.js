@@ -7,7 +7,6 @@ module.exports = {
 	name: "iap",
 	mixins: [DbService],
 	adapter: new SqlAdapter(
-		// "postgres://inveniraUser:password123@db:5432/inveniraBD?schema=invenirabd",
 		"postgres://uutsavacharya15@localhost:5432/inveniraBD?schema=invenirabd",
 		{
 			schema: "invenirabd",
@@ -24,7 +23,7 @@ module.exports = {
 	),
 
 	model: {
-		name: "iaps", //tabela "principal"
+		name: "iaps",
 		schema: "invenirabd",
 		timestamps: false,
 		define: {
@@ -34,118 +33,176 @@ module.exports = {
 			edges: Sequelize.JSON,
 		},
 	},
+
 	actions: {
 		async create(ctx) {
-			const { name, properties, nodes, edges, user_id } = ctx.params;
 			try {
+				const { name, properties, nodes, edges, user_id } = ctx.params;
+
 				const iap = await this.adapter.model.create({
 					name,
-					properties,
-					nodes,
-					edges,
+					properties: properties || {},
+					nodes: nodes || [],
+					edges: edges || [],
 				});
-				// Insert ownership record
+
+				if (edges && edges.length) {
+					await ctx.call("activity_connections.create", {
+						iap_id: iap.id,
+						edges,
+					});
+				}
+
 				await this.adapter.db.query(
-					`INSERT INTO invenirabd.iap_ownership (users_id, iap_id, is_owner) 
-				 VALUES (${user_id}, ${iap.id}, TRUE)`
+					`INSERT INTO invenirabd.iap_ownership 
+                     (users_id, iap_id, is_owner) 
+                     VALUES (${user_id}, ${iap.id}, TRUE)`
 				);
+
 				return iap;
 			} catch (error) {
 				throw new MoleculerError(
-					"Failed to create iap: " + error.message,
+					`Failed to create IAP: ${error.message}`,
 					500
 				);
 			}
 		},
 
 		async get(ctx) {
-			const iap = await this.adapter.model.findOne({
-				where: { id: ctx.params.id },
-			});
-			if (!iap) {
-				throw new MoleculerError("IAP not found", 404);
+			try {
+				const iap = await this.adapter.model.findOne({
+					where: { id: ctx.params.id },
+				});
+				if (!iap) throw new MoleculerError("IAP not found", 404);
+				return iap;
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to get IAP: ${error.message}`,
+					500
+				);
 			}
-			return iap;
 		},
 
 		async list(ctx) {
-			const { all, name, user_id } = ctx.params;
-			if (all) {
-				return await this.adapter.model.findAll();
-			} else if (user_id) {
-				// Get user's owned IAPs
-				const [results] = await this.adapter.db.query(
-					`SELECT i.* 
-				FROM "invenirabd".iaps i
-				JOIN "invenirabd".iap_ownership io ON i.id = io.iap_id
-				WHERE io.users_id = ${user_id} AND io.is_owner = TRUE`
-				);
-				return results;
-			} else {
+			try {
+				const { all, name, user_id } = ctx.params;
+
+				if (all) {
+					return await this.adapter.model.findAll();
+				}
+
+				if (user_id) {
+					const [results] = await this.adapter.db.query(
+						`SELECT i.* FROM invenirabd.iaps i
+                         JOIN invenirabd.iap_ownership io ON i.id = io.iap_id
+                         WHERE io.users_id = ${user_id} AND io.is_owner = TRUE`
+					);
+					return results || [];
+				}
+
 				return await this.adapter.model.findAll({
-					where: {
-						name: {
-							[Sequelize.Op.iLike]: `%${name}%`,
-						},
-					},
+					where: name
+						? {
+								name: {
+									[Sequelize.Op.iLike]: `%${name}%`,
+								},
+						  }
+						: {},
 				});
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to list IAPs: ${error.message}`,
+					500
+				);
 			}
 		},
 
 		async update(ctx) {
-			const { id, user_id, ...updateData } = ctx.params;
 			try {
-				// Check ownership
+				// Correct destructuring to include edges and nodes in updateData
+				const { id, user_id, ...updateData } = ctx.params;
+
 				const [ownership] = await this.adapter.db.query(
-					`SELECT 1 FROM invenirabd.iap_ownership 
+					`SELECT 1 FROM invenirabd.iap_ownership
 				 WHERE users_id = ${user_id} AND iap_id = ${id} AND is_owner = TRUE`
 				);
-				if (ownership.length === 0) {
+				if (!ownership.length) {
 					throw new MoleculerError(
 						"Unauthorized: Not the IAP owner",
 						403
 					);
 				}
 
+				// Use updateData.edges and updateData.nodes for validation
+				if (updateData.edges) {
+					const nodeIds = updateData.nodes
+						? updateData.nodes.map((n) => n.id)
+						: [];
+					const invalidEdges = updateData.edges.filter(
+						(edge) =>
+							!nodeIds.includes(edge.source) ||
+							!nodeIds.includes(edge.target)
+					);
+
+					if (invalidEdges.length > 0) {
+						throw new MoleculerError(
+							"Edges reference non-existent nodes",
+							400
+						);
+					}
+
+					// Update activity_connections
+					await ctx.call("activity_connections.deleteByIap", {
+						iap_id: id,
+					});
+					if (updateData.edges.length) {
+						await ctx.call("activity_connections.create", {
+							iap_id: id,
+							edges: updateData.edges,
+						});
+					}
+				}
+
 				const iap = await this.adapter.model.findOne({ where: { id } });
 				if (!iap) throw new MoleculerError("IAP not found", 404);
-
+				// Update the IAP with all data, including edges and nodes
 				await iap.update(updateData);
 				return iap;
 			} catch (error) {
 				throw new MoleculerError(
-					"Failed to update iap: " + error.message,
+					`Failed to update IAP: ${error.message}`,
 					500
 				);
 			}
 		},
 
 		async remove(ctx) {
-			const { id, user_id } = ctx.params;
 			try {
-				// Check ownership
+				const { id, user_id } = ctx.params;
+
 				const [ownership] = await this.adapter.db.query(
 					`SELECT 1 FROM invenirabd.iap_ownership
-				 WHERE users_id = ${user_id} AND iap_id = ${id} AND is_owner = TRUE`
+		             WHERE users_id = ${user_id} AND iap_id = ${id} AND is_owner = TRUE`
 				);
-				if (ownership.length === 0) {
+				if (!ownership.length) {
 					throw new MoleculerError(
 						"Unauthorized: Not the IAP owner",
 						403
 					);
 				}
 
-				// Delete related ownership entries
+				await ctx.call("activity_connections.deleteByIap", {
+					iap_id: id,
+				});
 				await this.adapter.db.query(
 					`DELETE FROM invenirabd.iap_ownership WHERE iap_id = ${id}`
 				);
-
-				// Delete IAP
 				await this.adapter.model.destroy({ where: { id } });
-				return { message: "IAP deleted" };
+
+				return { message: "IAP deleted successfully" };
 			} catch (error) {
 				throw new MoleculerError(
-					"Failed to delete iap: " + error.message,
+					`Failed to delete IAP: ${error.message}`,
 					500
 				);
 			}

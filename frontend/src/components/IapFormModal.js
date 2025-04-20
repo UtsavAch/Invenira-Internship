@@ -117,7 +117,7 @@ const IapFormModal = ({
         `activity_${activityId}`,
     }));
 
-    const edges = orderedActivityIds.slice(0, -1).map((currentId, index) => {
+    let edges = orderedActivityIds.slice(0, -1).map((currentId, index) => {
       const nextId = orderedActivityIds[index + 1];
       return {
         source: currentId,
@@ -125,6 +125,11 @@ const IapFormModal = ({
         label: "not-completed",
       };
     });
+    // Add validation to ensure nodes and edges match
+    if (orderedActivityIds.length >= 1 && edges.length === 0) {
+      // Clear existing edges if only 1 node remains
+      edges = [];
+    }
 
     onSubmit({
       ...localFormData,
