@@ -14,7 +14,7 @@ import {
   faTrash,
   faPlus,
   faSearch,
-  faPlay,
+  faInfo,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import ActivityFormModal from "./ActivityFormModal";
@@ -165,8 +165,8 @@ const MyActivities = () => {
     setError(null);
   };
 
-  const handleStartActivity = (id) => {
-    navigate(`/start-activity/${id}`);
+  const handleActivityInfo = (id) => {
+    navigate(`/activity_info/${id}`);
   };
 
   return (
@@ -245,12 +245,18 @@ const MyActivities = () => {
                     </div>
                     <div style={{ display: "flex", gap: "10px" }}>
                       <Button
-                        variant="success"
+                        variant="none"
                         size="sm"
                         className="me-2"
-                        onClick={() => handleStartActivity(activity.id)}
+                        onClick={() => handleActivityInfo(activity.id)}
+                        style={{
+                          width: "30px",
+                          height: "30px",
+                          background: "#ccc",
+                          borderRadius: "100%",
+                        }}
                       >
-                        <FontAwesomeIcon icon={faPlay} />
+                        <FontAwesomeIcon icon={faInfo} />
                       </Button>
                       <Button
                         variant="primary"

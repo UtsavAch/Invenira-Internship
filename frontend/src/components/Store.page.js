@@ -10,7 +10,7 @@ import {
   Card,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch, faPlay } from "@fortawesome/free-solid-svg-icons";
+import { faSearch, faInfo } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -57,12 +57,12 @@ const Store = () => {
     activity.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleStartActivity = (id) => {
-    navigate(`/start-activity/${id}`);
+  const handleActivityInfo = (id) => {
+    navigate(`/activity-info/${id}`);
   };
 
-  const handleStartIap = (id) => {
-    navigate(`/deploy-iap/${id}`);
+  const handleIapInfo = (id) => {
+    navigate(`/iap-info/${id}`);
   };
 
   return (
@@ -137,11 +137,17 @@ const Store = () => {
                       </div>
                       <div>
                         <Button
-                          variant="primary"
+                          variant="none"
                           size="sm"
-                          onClick={() => handleStartIap(iap.id)}
+                          onClick={() => handleIapInfo(iap.id)}
+                          style={{
+                            width: "30px",
+                            height: "30px",
+                            background: "#ccc",
+                            borderRadius: "100%",
+                          }}
                         >
-                          <FontAwesomeIcon icon={faPlay} />
+                          <FontAwesomeIcon icon={faInfo} />
                         </Button>
                       </div>
                     </ListGroup.Item>
@@ -176,11 +182,17 @@ const Store = () => {
                       </div>
                       <div>
                         <Button
-                          variant="success"
+                          variant="none"
                           size="sm"
-                          onClick={() => handleStartActivity(activity.id)}
+                          style={{
+                            width: "30px",
+                            height: "30px",
+                            background: "#ccc",
+                            borderRadius: "100%",
+                          }}
+                          onClick={() => handleActivityInfo(activity.id)}
                         >
-                          <FontAwesomeIcon icon={faPlay} />
+                          <FontAwesomeIcon icon={faInfo} />
                         </Button>
                       </div>
                     </ListGroup.Item>
