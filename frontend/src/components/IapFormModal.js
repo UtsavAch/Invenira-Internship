@@ -187,7 +187,12 @@ const IapFormModal = ({
                   </Button>
                 </div>
               ))}
-              <Button variant="primary" onClick={addProperty} className="mt-2">
+              <Button
+                variant="primary"
+                onClick={addProperty}
+                className="mt-2"
+                style={{ marginLeft: "10px" }}
+              >
                 Add Property
               </Button>
             </Form.Group>
@@ -266,7 +271,10 @@ const IapFormModal = ({
           </div>
 
           <div className="mt-auto pt-3 border-top">
-            <div className="d-flex justify-content-end gap-2">
+            <div
+              className="d-flex justify-content-end gap-2"
+              style={{ display: "flex", gap: "10px" }}
+            >
               <Button variant="secondary" onClick={onHide}>
                 Cancel
               </Button>

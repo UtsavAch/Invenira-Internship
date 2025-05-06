@@ -116,7 +116,7 @@ module.exports = {
 		/**
 		 * List all activity connections
 		 */
-		async list(ctx) {
+		async list() {
 			try {
 				return await this.adapter.model.findAll();
 			} catch (error) {

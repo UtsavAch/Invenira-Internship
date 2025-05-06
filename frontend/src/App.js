@@ -1,36 +1,17 @@
 import React, { Component } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Navbar, Nav, NavItem } from "react-bootstrap";
-import Activities from "./components/activities";
-import ActivityAnalytics from "./components/activity_analytics";
-import IAPAnalytics from "./components/iap_analytics";
-import EditIAP from "./components/edit_iap";
-import DeployedIaps from "./components/deployed_iaps";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit } from "@fortawesome/free-solid-svg-icons";
-import StartActivity from "./components/StartActivity";
-
+import axios from "axios";
 import { UserProvider } from "./contexts/user.context";
 import Home from "./components/Home.page";
 import Login from "./components/Login.page";
-// import PrivateRoute from "./components/PrivateRoute.page";
 import Signup from "./components/Signup.page";
 import CustomNavBar from "./components/CustomNavBar";
 import Profile from "./components/Profile.page";
-import MyIaps from "./components/MyIaps";
-import MyActivities from "./components/MyActivities";
-import MyIapActivityDetails from "./components/MyIaps.activity.details";
-import MyIapLearnerDetails from "./components/MyIaps.learners.details";
-import Analitics from "./components/iap_analytics";
-import CreateActivityForm from "./components/create_activity";
-import axios from "axios";
-import UserObjectiveDetails from "./components/User.objective.details";
-import ObjectiveDetailsPage from "./components/Objective.details.page";
-import UserIapDetails from "./components/User.iap.details";
-import UserAllIaps from "./components/User.all.iaps.details";
-import Store from "./components/Store";
-
-import UsersManager from "./components/UsersManager";
+import MyIaps from "./components/MyIaps.page";
+import MyActivities from "./components/MyActivities.page";
+import Store from "./components/Store.page";
+import UsersManager from "./components/UsersManager.page";
+import StartActivity from "./components/StartActivity";
 
 import {
   BrowserRouter as Router,
@@ -57,23 +38,6 @@ class App extends Component {
       });
   }
 
-  EditIAP = () => {
-    const params = useParams();
-    const id = params.id;
-    return <EditIAP id={id} />;
-  };
-
-  LoadActivityAnalytics = () => {
-    const params = useParams();
-    const id = params.id;
-    return <ActivityAnalytics id={id} />;
-  };
-
-  Analitics = () => {
-    const params = useParams();
-    const id = params.id;
-    return <Analitics id={id} />;
-  };
   StartActivity = () => {
     const params = useParams();
     const id = params._id;
@@ -91,7 +55,6 @@ class App extends Component {
               <Route exact path="/usersManager" element={<UsersManager />} />
               <Route exact path="/" element={<Home />} />
               <Route exact path="/customNavBar" element={<CustomNavBar />} />
-              <Route exact path="/create-iap" element={<EditIAP />} />
               <Route exact path="/edit-iap/:id" element={<this.EditIAP />} />
               <Route exact path="/iaps" element={<MyIaps />} />
               <Route exact path="/activities" element={<MyActivities />} />
@@ -112,42 +75,6 @@ class App extends Component {
               <Route exact path="/login" element={<Login />} />
               <Route exact path="/signup" element={<Signup />} />
               <Route exact path="/profile" element={<Profile />} />
-              <Route
-                exact
-                path="/iapActivityDetails/:id"
-                element={<MyIapActivityDetails />}
-              />
-              <Route
-                exact
-                path="/iapLearnerDetails"
-                element={<MyIapLearnerDetails />}
-              />
-
-              <Route
-                exact
-                path="/createActivity"
-                element={<CreateActivityForm />}
-              />
-              <Route
-                exact
-                path="/userObjectiveDetails/:userID/:objID"
-                element={<UserObjectiveDetails />}
-              />
-              <Route
-                exact
-                path="/objectiveDetailsPage/:objID"
-                element={<ObjectiveDetailsPage />}
-              />
-              <Route
-                exact
-                path="/userIapDetails/:userID/:iapID"
-                element={<UserIapDetails />}
-              />
-              <Route
-                exact
-                path="/userAllIaps/:userID"
-                element={<UserAllIaps />}
-              />
 
               {/* We are protecting our Home Page from unauthenticated */}
               {/* users by wrapping it with PrivateRoute here. Put private pages here*/}

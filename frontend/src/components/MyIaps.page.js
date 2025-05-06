@@ -224,7 +224,7 @@ const MyIaps = () => {
                         </small>
                       )}
                     </div>
-                    <div>
+                    <div style={{ display: "flex", gap: "10px" }}>
                       <Button
                         variant="success"
                         size="sm"
