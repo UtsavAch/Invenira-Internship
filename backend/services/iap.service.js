@@ -195,13 +195,7 @@ module.exports = {
 				await ctx.call("activity_connections.deleteByIap", {
 					iap_id: id,
 				});
-				// await this.adapter.db.query(
-				// 	`DELETE FROM invenirabd.deployed_iaps
-				// 	 WHERE id IN (
-				// 	   SELECT id FROM invenirabd.deployed_iaps
-				// 	   WHERE name = (SELECT name FROM invenirabd.iaps WHERE id = ${id})
-				// 	 )`
-				// );
+
 				await this.adapter.db.query(
 					`DELETE FROM invenirabd.iap_ownership WHERE iap_id = ${id}`
 				);
@@ -225,86 +219,5 @@ module.exports = {
 		// 	await iap.destroy();
 		// 	return iap;
 		// },
-
-		async deployIap(ctx) {
-			try {
-				const { iap_id, user_id, deployURL } = ctx.params;
-
-				// 1. Verify ownership
-				const [ownership] = await this.adapter.db.query(
-					`SELECT 1 FROM invenirabd.iap_ownership 
-         WHERE users_id = ${user_id} 
-         AND iap_id = ${iap_id} 
-         AND is_owner = TRUE`
-				);
-
-				if (!ownership.length) {
-					throw new MoleculerError(
-						"Unauthorized: Not the IAP owner",
-						403
-					);
-				}
-
-				// 2. Get the IAP and check deployment status
-				const iap = await this.adapter.model.findOne({
-					where: { id: iap_id },
-				});
-
-				if (!iap) {
-					throw new MoleculerError("IAP not found", 404);
-				}
-
-				// New: Check if already deployed
-				if (iap.is_deployed) {
-					throw new MoleculerError("IAP is already deployed", 400);
-				}
-
-				// 3. Create deployed_iaps entry
-				const [deployedIap] = await this.adapter.db.query(
-					`INSERT INTO invenirabd.deployed_iaps 
-         (name, properties, nodes, edges, objectives, deploy_url)
-         VALUES (?, ?, ?, ?, ?, ?)
-         RETURNING *`,
-					{
-						replacements: [
-							iap.name,
-							JSON.stringify(iap.properties),
-							JSON.stringify(iap.nodes),
-							JSON.stringify(iap.edges),
-							JSON.stringify({}), // Empty objectives
-							deployURL,
-						],
-						type: Sequelize.QueryTypes.INSERT,
-					}
-				);
-
-				// 4. Update original IAP's deployment status
-				await this.adapter.model.update(
-					{ is_deployed: true },
-					{ where: { id: iap_id } }
-				);
-
-				return deployedIap;
-			} catch (error) {
-				throw new MoleculerError(
-					`Deployment failed: ${error.message}`,
-					500
-				);
-			}
-		},
-
-		async listDeployed(ctx) {
-			try {
-				const [results] = await this.adapter.db.query(
-					"SELECT * FROM invenirabd.deployed_iaps"
-				);
-				return results;
-			} catch (error) {
-				throw new MoleculerError(
-					`Failed to list deployed IAPs: ${error.message}`,
-					500
-				);
-			}
-		},
 	},
 };

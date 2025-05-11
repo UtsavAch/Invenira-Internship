@@ -148,42 +148,7 @@ const MyIaps = () => {
   };
 
   const handleDeployIap = async (id) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/iaps/${id}/deploy`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: user.id,
-          deployURL: "",
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Deployment failed");
-      }
-
-      // Refresh the IAPs list
-      const fetchIaps = async () => {
-        try {
-          setLoading(true);
-          const response = await fetch(
-            `${API_BASE_URL}/iaps?user_id=${user.id}`
-          );
-          const data = await response.json();
-          setIaps(Array.isArray(data) ? data : []);
-          setLoading(false);
-        } catch (err) {
-          setError("Failed to fetch IAPs");
-          setLoading(false);
-        }
-      };
-      await fetchIaps();
-    } catch (err) {
-      setError(err.message);
-    }
+    ///Implement the code
   };
 
   const handleIapInfo = (id) => {

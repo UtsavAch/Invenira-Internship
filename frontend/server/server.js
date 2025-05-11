@@ -315,51 +315,6 @@ app.delete("/iaps/:id", async (req, res) => {
 //   }
 // });
 
-app.post("/iaps/:id/deploy", async (req, res) => {
-  const { user_id } = req.body;
-  try {
-    const deployedIap = await broker.call("iap.deployIap", {
-      iap_id: req.params.id,
-      user_id,
-      deployURL: "",
-    });
-    res.json(deployedIap);
-  } catch (error) {
-    handleError(res, error);
-  }
-});
-
-// List all deployed IAPs
-app.get("/deployed-iaps", async (req, res) => {
-  try {
-    const deployedIaps = await broker.call("iap.listDeployed");
-    res.json(Array.isArray(deployedIaps) ? deployedIaps : []);
-  } catch (error) {
-    handleError(res, error);
-  }
-});
-
-// List all iap activities
-app.get("/iap_activities", async (req, res) => {
-  try {
-    const iapActivities = await broker.call("deployed_iaps.listIapActivities");
-    res.json(Array.isArray(iapActivities) ? iapActivities : []);
-  } catch (error) {
-    handleError(res, error);
-  }
-});
-
-app.get("/deployed-iaps/user/:user_id", async (req, res) => {
-  try {
-    const deployedIaps = await broker.call("deployed_iaps.listDeployedByUser", {
-      user_id: req.params.user_id,
-    });
-    res.json(Array.isArray(deployedIaps) ? deployedIaps : []);
-  } catch (error) {
-    handleError(res, error);
-  }
-});
-
 app.get("/activity-connections", async (req, res) => {
   try {
     const connections = await broker.call("activity_connections.list");

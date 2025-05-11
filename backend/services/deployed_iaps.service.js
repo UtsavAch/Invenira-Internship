@@ -37,38 +37,6 @@ module.exports = {
 	},
 
 	actions: {
-		async listDeployedByUser(ctx) {
-			try {
-				const { user_id } = ctx.params;
-
-				const [results] = await this.adapter.db.query(
-					`SELECT di.* FROM invenirabd.deployed_iaps di
-                 JOIN invenirabd.iaps i ON di.name = i.name
-                 JOIN invenirabd.iap_ownership io ON i.id = io.iap_id
-                 WHERE io.users_id = ${user_id} AND io.is_owner = TRUE`
-				);
-
-				return results;
-			} catch (error) {
-				throw new MoleculerError(
-					`Failed to list user's deployed IAPs: ${error.message}`,
-					500
-				);
-			}
-		},
-
-		async listIapActivities(ctx) {
-			try {
-				const [results] = await this.adapter.db.query(
-					"SELECT * FROM invenirabd.iap_activities"
-				);
-				return results;
-			} catch (error) {
-				throw new MoleculerError(
-					`Failed to list iap activities: ${error.message}`,
-					500
-				);
-			}
-		},
+		//Actions to be implemented
 	},
 };
