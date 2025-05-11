@@ -31,7 +31,7 @@ const Store = () => {
         // Fetch both IAPs and Activities in parallel
         const [iapsResponse, activitiesResponse] = await Promise.all([
           fetch(`${API_BASE_URL}/iaps?all=true`),
-          fetch(`${API_BASE_URL}/activities?all=true`),
+          fetch(`${API_BASE_URL}/activities?deployed=true`),
         ]);
 
         const iapsData = await iapsResponse.json();

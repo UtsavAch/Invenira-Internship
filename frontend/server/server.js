@@ -122,6 +122,7 @@ app.get("/activities", async (req, res) => {
       all: req.query.all,
       name: req.query.name,
       user_id: req.query.user_id,
+      deployed: req.query.deployed,
     });
     res.json(activities);
   } catch (error) {

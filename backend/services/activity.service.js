@@ -195,20 +195,49 @@ module.exports = {
 		 * @actions
 		 * @returns {Array} List of available Activities
 		 */
+		// async list(ctx) {
+		// 	const { all, name, user_id } = ctx.params;
+		// 	if (all) {
+		// 		return await this.adapter.model.findAll();
+		// 	} else if (user_id) {
+		// 		// Raw query to get user's activities
+		// 		const [results] = await this.adapter.db.query(
+		// 			`SELECT a.*
+		// 			FROM "invenirabd".activities a
+		// 			JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
+		// 			WHERE ua.users_id = ${user_id}`
+		// 		);
+		// 		return results;
+		// 	} else {
+		// 		return await this.adapter.model.findAll({
+		// 			where: { name: { [Sequelize.Op.iLike]: `%${name}%` } },
+		// 		});
+		// 	}
+		// },
 		async list(ctx) {
-			const { all, name, user_id } = ctx.params;
+			const { all, name, user_id, deployed } = ctx.params;
+
 			if (all) {
 				return await this.adapter.model.findAll();
-			} else if (user_id) {
-				// Raw query to get user's activities
+			}
+
+			if (user_id) {
 				const [results] = await this.adapter.db.query(
 					`SELECT a.* 
-					FROM "invenirabd".activities a
-					JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
-					WHERE ua.users_id = ${user_id}`
+				 FROM "invenirabd".activities a
+				 JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
+				 WHERE ua.users_id = ${user_id}`
 				);
 				return results;
-			} else {
+			}
+
+			if (deployed !== undefined) {
+				return await this.adapter.model.findAll({
+					where: { is_deployed: deployed },
+				});
+			}
+
+			if (name) {
 				return await this.adapter.model.findAll({
 					where: { name: { [Sequelize.Op.iLike]: `%${name}%` } },
 				});
