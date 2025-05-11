@@ -214,5 +214,68 @@ module.exports = {
 				});
 			}
 		},
+
+		async deploy(ctx) {
+			const { id, user_id, analytics } = ctx.params;
+			try {
+				// 1. Verify ownership
+				const [ownership] = await this.adapter.db.query(
+					`SELECT 1 FROM "invenirabd".users_activities 
+		 WHERE users_id = ${user_id} AND activity_id = ${id}`
+				);
+				if (ownership.length === 0)
+					throw new MoleculerError("Unauthorized", 403);
+
+				// 2. Validate analytics
+				if (analytics && analytics.length === 0)
+					throw new MoleculerError(
+						"At least one analytic required",
+						400
+					);
+
+				// 3. Start transaction
+				const transaction = await this.adapter.db.transaction();
+
+				try {
+					// Update activity
+					await this.adapter.model.update(
+						{ is_deployed: true },
+						{ where: { id }, transaction }
+					);
+
+					// Create analytics
+					for (const analytic of analytics) {
+						await this.adapter.db.query(
+							`INSERT INTO "invenirabd".analytics 
+			 (activity_id, name, score) 
+			 VALUES (${id}, '${analytic.name}', 0)`,
+							{ transaction }
+						);
+					}
+
+					await transaction.commit();
+					return { success: true };
+				} catch (error) {
+					await transaction.rollback();
+					throw error;
+				}
+			} catch (error) {
+				throw new MoleculerError(error.message, error.code || 500);
+			}
+		},
+
+		async listAnalytics(ctx) {
+			try {
+				const [results] = await this.adapter.db.query(
+					"SELECT * FROM invenirabd.analytics"
+				);
+				return results;
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to list analytics: ${error.message}`,
+					500
+				);
+			}
+		},
 	},
 };

@@ -15,9 +15,11 @@ import {
   faPlus,
   faSearch,
   faInfo,
+  faPlay,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import ActivityFormModal from "./ActivityFormModal";
+import AnalyticsDeployModal from "./AnalyticsDeployModal";
 import { UserContext } from "../contexts/user.context";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -31,6 +33,8 @@ const MyActivities = () => {
   const [currentActivity, setCurrentActivity] = useState(null);
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
+  const [showDeployModal, setShowDeployModal] = useState(false);
+  const [selectedActivityId, setSelectedActivityId] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -169,6 +173,35 @@ const MyActivities = () => {
     navigate(`/activity_info/${id}`);
   };
 
+  const handleDeployActivity = async (analyticsList) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/activities/${selectedActivityId}/deploy`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: user?.id,
+            analytics: analyticsList,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Deployment failed");
+
+      // Update activity status
+      setActivities(
+        activities.map((activity) =>
+          activity.id === selectedActivityId
+            ? { ...activity, is_deployed: true }
+            : activity
+        )
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <Container className="mt-4">
       <Navbar bg="light" className="mb-4 p-3 rounded">
@@ -259,6 +292,22 @@ const MyActivities = () => {
                         <FontAwesomeIcon icon={faInfo} />
                       </Button>
                       <Button
+                        variant="success"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => {
+                          setSelectedActivityId(activity.id);
+                          setShowDeployModal(true);
+                        }}
+                        disabled={activity.is_deployed}
+                      >
+                        {activity.is_deployed ? (
+                          "Deployed"
+                        ) : (
+                          <FontAwesomeIcon icon={faPlay} />
+                        )}
+                      </Button>
+                      <Button
                         variant="primary"
                         size="sm"
                         className="me-2"
@@ -292,6 +341,11 @@ const MyActivities = () => {
         onSubmit={handleSubmit}
         formData={formData}
         currentActivity={currentActivity}
+      />
+      <AnalyticsDeployModal
+        show={showDeployModal}
+        onHide={() => setShowDeployModal(false)}
+        onSubmit={handleDeployActivity}
       />
     </Container>
   );

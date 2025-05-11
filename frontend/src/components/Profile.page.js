@@ -1,11 +1,20 @@
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../contexts/user.context";
-import { Typography, Box } from "@mui/material";
+import {
+  Typography,
+  Box,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
+} from "@mui/material";
 import PersonalInfo from "../components/PersonalInfo";
 
 export default function ProfilePage() {
   const { user, fetchUser } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
+  const [deployedIaps, setDeployedIaps] = useState([]);
+  const [iapLoading, setIapLoading] = useState(false);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -19,6 +28,27 @@ export default function ProfilePage() {
     };
     loadUserData();
   }, [fetchUser]);
+
+  useEffect(() => {
+    const fetchDeployedIaps = async () => {
+      if (!user?.id) return;
+
+      setIapLoading(true);
+      try {
+        const response = await fetch(
+          `http://localhost:8000/deployed-iaps/user/${user.id}`
+        );
+        const data = await response.json();
+        setDeployedIaps(data);
+      } catch (error) {
+        console.error("Failed to fetch deployed IAPs:", error);
+      } finally {
+        setIapLoading(false);
+      }
+    };
+
+    fetchDeployedIaps();
+  }, [user?.id]);
 
   if (loading) {
     return (
@@ -39,24 +69,44 @@ export default function ProfilePage() {
   }
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-      }}
-    >
+    <Box sx={{ display: "flex" }}>
       {/* Main Profile Section */}
       <Box
         sx={{
           flex: 1,
           p: 3,
           minHeight: "90vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
           backgroundColor: "#f9f9f9",
         }}
       >
-        <Typography variant="h4">PROFILE</Typography>
+        <Typography variant="h4" sx={{ mb: 3 }}>
+          PROFILE
+        </Typography>
+
+        <Typography variant="h5" sx={{ mb: 2 }}>
+          My Deployed IAPs
+        </Typography>
+
+        {iapLoading ? (
+          <Typography>Loading deployed IAPs...</Typography>
+        ) : deployedIaps.length === 0 ? (
+          <Typography>No deployed IAPs found</Typography>
+        ) : (
+          <Paper elevation={3} sx={{ p: 2 }}>
+            <List>
+              {deployedIaps.map((iap) => (
+                <ListItem key={iap.id} divider>
+                  <ListItemText
+                    primary={iap.name}
+                    secondary={`Deployed on: ${new Date(
+                      iap.created_at
+                    ).toLocaleDateString()}`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+        )}
       </Box>
 
       {/* Personal Info - Right Sidebar */}

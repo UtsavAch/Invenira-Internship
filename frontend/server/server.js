@@ -15,6 +15,7 @@ broker.loadService("../../backend/services/activity_connections.service.js");
 broker.loadService("../../backend/services/users.service.js");
 broker.loadService("../../backend/services/activity.service.js");
 broker.loadService("../../backend/services/iap.service.js");
+broker.loadService("../../backend/services/deployed_iaps.service.js");
 
 // Start the broker
 broker.start().then(() => {
@@ -194,6 +195,30 @@ app.delete("/activities/:id", async (req, res) => {
   }
 });
 
+//Deploy an activity
+app.post("/activities/:id/deploy", async (req, res) => {
+  try {
+    const result = await broker.call("activity.deploy", {
+      id: req.params.id,
+      user_id: req.body.user_id,
+      analytics: req.body.analytics,
+    });
+    res.json(result);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// List all deployed IAPs
+app.get("/analytics", async (req, res) => {
+  try {
+    const analytics = await broker.call("activity.listAnalytics");
+    res.json(Array.isArray(analytics) ? analytics : []);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
 /////////////////////////////////////
 ///////////HANDLING IAPS///////////////////////
 // List all IAPs
@@ -302,8 +327,19 @@ app.get("/deployed-iaps", async (req, res) => {
 // List all iap activities
 app.get("/iap_activities", async (req, res) => {
   try {
-    const iapActivities = await broker.call("iap.listIapActivities");
+    const iapActivities = await broker.call("deployed_iaps.listIapActivities");
     res.json(Array.isArray(iapActivities) ? iapActivities : []);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+app.get("/deployed-iaps/user/:user_id", async (req, res) => {
+  try {
+    const deployedIaps = await broker.call("deployed_iaps.listDeployedByUser", {
+      user_id: req.params.user_id,
+    });
+    res.json(Array.isArray(deployedIaps) ? deployedIaps : []);
   } catch (error) {
     handleError(res, error);
   }

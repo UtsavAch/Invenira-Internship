@@ -306,19 +306,5 @@ module.exports = {
 				);
 			}
 		},
-
-		async listIapActivities(ctx) {
-			try {
-				const [results] = await this.adapter.db.query(
-					"SELECT * FROM invenirabd.iap_activities"
-				);
-				return results;
-			} catch (error) {
-				throw new MoleculerError(
-					`Failed to list iap activities: ${error.message}`,
-					500
-				);
-			}
-		},
 	},
 };
