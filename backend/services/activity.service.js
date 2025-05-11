@@ -303,14 +303,10 @@ module.exports = {
 					);
 				}
 
-				// Check existing ownership using parameterized query
+				// Check existing ownership
 				const [existing] = await this.adapter.db.query(
-					`SELECT 1 FROM "invenirabd".users_activities 
-				 WHERE users_id = $1 AND activity_id = $2`,
-					{
-						type: Sequelize.QueryTypes.SELECT,
-						bind: [user_id, activity_id],
-					}
+					`SELECT 1 FROM invenirabd.users_activities 
+				 WHERE users_id = ${user_id} AND activity_id = ${activity_id}`
 				);
 
 				if (existing.length > 0) {
@@ -320,19 +316,18 @@ module.exports = {
 					);
 				}
 
-				// Create the association with parameterized query
+				// const transaction = await this.adapter.db.transaction();
+
+				// Create the association
 				await this.adapter.db.query(
-					`INSERT INTO "invenirabd".users_activities 
-				 (users_id, activity_id) VALUES ($1, $2)`,
-					{
-						type: Sequelize.QueryTypes.INSERT,
-						bind: [user_id, activity_id],
-					}
+					`INSERT INTO invenirabd.users_activities 
+				 (users_id, activity_id) VALUES (${user_id}, '${activity_id}')`
+					// { transaction }
 				);
 
 				return { success: true };
 			} catch (error) {
-				console.error("Add to user error:", error); // Add logging
+				console.error("Add to user error:", error);
 				throw new MoleculerError(
 					error.message || "Failed to add activity",
 					error.code || 500

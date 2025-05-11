@@ -11,14 +11,8 @@ import MyIaps from "./components/MyIaps.page";
 import MyActivities from "./components/MyActivities.page";
 import Store from "./components/Store.page";
 import UsersManager from "./components/UsersManager.page";
-import StartActivity from "./components/StartActivity";
 
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  useParams,
-} from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 //const db = require('./database');
 axios.defaults.baseURL = "http://localhost:8000";
@@ -37,12 +31,6 @@ class App extends Component {
         //console.error(error);
       });
   }
-
-  StartActivity = () => {
-    const params = useParams();
-    const id = params._id;
-    return <StartActivity id={id} />;
-  };
 
   render() {
     console.log("env: " + JSON.stringify(process.env));
@@ -65,12 +53,6 @@ class App extends Component {
                 element={<this.LoadActivityAnalytics />}
               />
               <Route path="/iap-analytics/:id" element={<this.Analitics />} />
-
-              <Route
-                exact
-                path="/start-activity/:id"
-                element={<this.StartActivity />}
-              />
 
               <Route exact path="/login" element={<Login />} />
               <Route exact path="/signup" element={<Signup />} />

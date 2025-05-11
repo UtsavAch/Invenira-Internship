@@ -126,6 +126,7 @@ app.get("/activities", async (req, res) => {
     });
     res.json(activities);
   } catch (error) {
+    console.error("Activities list error:", error);
     handleError(res, error);
   }
 });
