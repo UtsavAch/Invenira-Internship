@@ -195,25 +195,6 @@ module.exports = {
 		 * @actions
 		 * @returns {Array} List of available Activities
 		 */
-		// async list(ctx) {
-		// 	const { all, name, user_id } = ctx.params;
-		// 	if (all) {
-		// 		return await this.adapter.model.findAll();
-		// 	} else if (user_id) {
-		// 		// Raw query to get user's activities
-		// 		const [results] = await this.adapter.db.query(
-		// 			`SELECT a.*
-		// 			FROM "invenirabd".activities a
-		// 			JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
-		// 			WHERE ua.users_id = ${user_id}`
-		// 		);
-		// 		return results;
-		// 	} else {
-		// 		return await this.adapter.model.findAll({
-		// 			where: { name: { [Sequelize.Op.iLike]: `%${name}%` } },
-		// 		});
-		// 	}
-		// },
 		async list(ctx) {
 			const { all, name, user_id, deployed } = ctx.params;
 
@@ -223,7 +204,7 @@ module.exports = {
 
 			if (user_id) {
 				const [results] = await this.adapter.db.query(
-					`SELECT a.* 
+					`SELECT a.*
 				 FROM "invenirabd".activities a
 				 JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
 				 WHERE ua.users_id = ${user_id}`
@@ -303,6 +284,58 @@ module.exports = {
 				throw new MoleculerError(
 					`Failed to list analytics: ${error.message}`,
 					500
+				);
+			}
+		},
+
+		async addToUser(ctx) {
+			const { activity_id, user_id } = ctx.params;
+			try {
+				// Check if activity is deployed
+				const activity = await this.adapter.model.findOne({
+					where: { id: activity_id, is_deployed: true },
+				});
+
+				if (!activity) {
+					throw new MoleculerError(
+						"Activity not available for adding",
+						400
+					);
+				}
+
+				// Check existing ownership using parameterized query
+				const [existing] = await this.adapter.db.query(
+					`SELECT 1 FROM "invenirabd".users_activities 
+				 WHERE users_id = $1 AND activity_id = $2`,
+					{
+						type: Sequelize.QueryTypes.SELECT,
+						bind: [user_id, activity_id],
+					}
+				);
+
+				if (existing.length > 0) {
+					throw new MoleculerError(
+						"You already added the activity",
+						409
+					);
+				}
+
+				// Create the association with parameterized query
+				await this.adapter.db.query(
+					`INSERT INTO "invenirabd".users_activities 
+				 (users_id, activity_id) VALUES ($1, $2)`,
+					{
+						type: Sequelize.QueryTypes.INSERT,
+						bind: [user_id, activity_id],
+					}
+				);
+
+				return { success: true };
+			} catch (error) {
+				console.error("Add to user error:", error); // Add logging
+				throw new MoleculerError(
+					error.message || "Failed to add activity",
+					error.code || 500
 				);
 			}
 		},

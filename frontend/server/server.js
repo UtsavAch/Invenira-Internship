@@ -220,6 +220,19 @@ app.get("/analytics", async (req, res) => {
   }
 });
 
+// User adds the activity
+app.post("/activities/:id/add-to-user", async (req, res) => {
+  try {
+    const result = await broker.call("activity.addToUser", {
+      activity_id: req.params.id,
+      user_id: req.body.user_id,
+    });
+    res.json(result);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
 /////////////////////////////////////
 ///////////HANDLING IAPS///////////////////////
 // List all IAPs

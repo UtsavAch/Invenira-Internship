@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
+import { UserContext } from "../contexts/user.context";
 import {
   Container,
   Navbar,
@@ -10,12 +11,13 @@ import {
   Card,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch, faInfo } from "@fortawesome/free-solid-svg-icons";
+import { faSearch, faInfo, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const Store = () => {
+  const { user, fetchUser } = useContext(UserContext);
   const [iaps, setIaps] = useState([]);
   const [activities, setActivities] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,15 +26,31 @@ const Store = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        await fetchUser();
+      } catch (error) {
+        console.error("Failed to load user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadUserData();
+  }, [fetchUser]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
         // Fetch both IAPs and Activities in parallel
-        const [iapsResponse, activitiesResponse] = await Promise.all([
+        const [iapsResponse] = await Promise.all([
           fetch(`${API_BASE_URL}/iaps?all=true`),
-          fetch(`${API_BASE_URL}/activities?deployed=true`),
         ]);
+
+        const activitiesResponse = await fetch(
+          `${API_BASE_URL}/activities?deployed=true`
+        );
 
         const iapsData = await iapsResponse.json();
         const activitiesData = await activitiesResponse.json();
@@ -63,6 +81,32 @@ const Store = () => {
 
   const handleIapInfo = (id) => {
     navigate(`/iap-info/${id}`);
+  };
+
+  const handleAddActivity = async (activityId) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/activities/${activityId}/add-to-user`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: user?.id }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to add activity");
+
+      // Update local state
+      setActivities(
+        activities.map((a) =>
+          a.id === activityId ? { ...a, is_added: true } : a
+        )
+      );
+
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -168,6 +212,7 @@ const Store = () => {
               <ListGroup>
                 {filteredActivities.length > 0 ? (
                   filteredActivities.map((activity) => (
+                    // In Store.page.js, update the activity list item
                     <ListGroup.Item
                       key={activity.id}
                       className="d-flex justify-content-between align-items-center"
@@ -180,20 +225,38 @@ const Store = () => {
                           </small>
                         )}
                       </div>
-                      <div>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "10px",
+                        }}
+                      >
                         <Button
                           variant="none"
                           size="sm"
+                          onClick={() => handleActivityInfo(activity.id)}
                           style={{
                             width: "30px",
                             height: "30px",
                             background: "#ccc",
                             borderRadius: "100%",
                           }}
-                          onClick={() => handleActivityInfo(activity.id)}
                         >
                           <FontAwesomeIcon icon={faInfo} />
                         </Button>
+                        {user && !activity.is_added && (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="me-2"
+                            onClick={() => handleAddActivity(activity.id)}
+                          >
+                            <FontAwesomeIcon icon={faPlus} />
+                          </Button>
+                        )}
+                        {activity.is_added && (
+                          <span className="text-muted me-2">Added</span>
+                        )}
                       </div>
                     </ListGroup.Item>
                   ))

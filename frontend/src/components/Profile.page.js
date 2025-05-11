@@ -10,11 +10,13 @@ import {
 } from "@mui/material";
 import PersonalInfo from "../components/PersonalInfo";
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 export default function ProfilePage() {
   const { user, fetchUser } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const [deployedIaps, setDeployedIaps] = useState([]);
   const [iapLoading, setIapLoading] = useState(false);
+  const [activitiesAdded, setActivitiesAdded] = useState([]);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -28,6 +30,24 @@ export default function ProfilePage() {
     };
     loadUserData();
   }, [fetchUser]);
+
+  useEffect(() => {
+    const fetchAddedActivities = async () => {
+      if (!user?.id) return;
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/activities?user_id=${user.id}`
+        );
+        const data = await response.json();
+        setActivitiesAdded(data);
+      } catch (error) {
+        console.error("Failed to fetch added activities:", error);
+      }
+    };
+
+    fetchAddedActivities();
+  }, [user?.id]);
 
   useEffect(() => {
     const fetchDeployedIaps = async () => {
@@ -46,7 +66,6 @@ export default function ProfilePage() {
         setIapLoading(false);
       }
     };
-
     fetchDeployedIaps();
   }, [user?.id]);
 
@@ -100,6 +119,29 @@ export default function ProfilePage() {
                     primary={iap.name}
                     secondary={`Deployed on: ${new Date(
                       iap.created_at
+                    ).toLocaleDateString()}`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+        )}
+
+        <Typography variant="h5" sx={{ mb: 2, mt: 4 }}>
+          Activities You Added
+        </Typography>
+
+        {iapLoading ? (
+          <Typography>Loading activities...</Typography>
+        ) : (
+          <Paper elevation={3} sx={{ p: 2 }}>
+            <List>
+              {activitiesAdded.map((activity) => (
+                <ListItem key={activity.id} divider>
+                  <ListItemText
+                    primary={activity.name}
+                    secondary={`Added on: ${new Date(
+                      activity.added_at
                     ).toLocaleDateString()}`}
                   />
                 </ListItem>
