@@ -323,6 +323,7 @@ const MyIaps = () => {
         onSubmit={handleSubmit}
         formData={formData}
         currentIap={currentIap}
+        user={user}
       />
     </Container>
   );

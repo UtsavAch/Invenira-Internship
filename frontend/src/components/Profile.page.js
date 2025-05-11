@@ -37,7 +37,7 @@ export default function ProfilePage() {
 
       try {
         const response = await fetch(
-          `${API_BASE_URL}/activities?user_id=${user.id}`
+          `${API_BASE_URL}/activities?user_id=${user.id}&deployed=true`
         );
         const data = await response.json();
         setActivitiesAdded(data);

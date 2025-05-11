@@ -202,12 +202,22 @@ module.exports = {
 				return await this.adapter.model.findAll();
 			}
 
+			// if (user_id) {
+			// 	const [results] = await this.adapter.db.query(
+			// 		`SELECT a.*
+			// 	 FROM "invenirabd".activities a
+			// 	 JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
+			// 	 WHERE ua.users_id = ${user_id}`
+			// 	);
+			// 	return results;
+			// }
 			if (user_id) {
 				const [results] = await this.adapter.db.query(
 					`SELECT a.*
-				 FROM "invenirabd".activities a
-				 JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
-				 WHERE ua.users_id = ${user_id}`
+					 FROM "invenirabd".activities a
+					 JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
+					 WHERE ua.users_id = ${user_id}
+					 ${deployed !== undefined ? "AND a.is_deployed = " + deployed : ""}`
 				);
 				return results;
 			}
@@ -316,13 +326,10 @@ module.exports = {
 					);
 				}
 
-				// const transaction = await this.adapter.db.transaction();
-
 				// Create the association
 				await this.adapter.db.query(
 					`INSERT INTO invenirabd.users_activities 
 				 (users_id, activity_id) VALUES (${user_id}, '${activity_id}')`
-					// { transaction }
 				);
 
 				return { success: true };

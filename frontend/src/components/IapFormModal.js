@@ -10,6 +10,7 @@ const IapFormModal = ({
   onSubmit,
   formData: initialFormData,
   currentIap,
+  user,
 }) => {
   const [localFormData, setLocalFormData] = useState(initialFormData);
   const [keyValuePairs, setKeyValuePairs] = useState([]);
@@ -34,7 +35,9 @@ const IapFormModal = ({
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/activities?all=true`);
+        const response = await fetch(
+          `${API_BASE_URL}/activities?user_id=${user.id}&deployed=true`
+        );
         const data = await response.json();
         setActivities(data);
       } catch (error) {
@@ -42,7 +45,7 @@ const IapFormModal = ({
       }
     };
     fetchActivities();
-  }, []);
+  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
