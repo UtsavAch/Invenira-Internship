@@ -20,6 +20,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import IapFormModal from "./IapFormModal";
 import { UserContext } from "../contexts/user.context";
+import IapDeployModal from "./IapDeployModal";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -32,6 +33,9 @@ const MyIaps = () => {
   const [currentIap, setCurrentIap] = useState(null);
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
+  const [showDeployModal, setShowDeployModal] = useState(false);
+  const [selectedIap, setSelectedIap] = useState(null);
+  const [deployLoading, setDeployLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -147,8 +151,39 @@ const MyIaps = () => {
     setError(null);
   };
 
-  const handleDeployIap = async (id) => {
-    ///Implement the code
+  const handleDeployIap = (id) => {
+    const iap = iaps.find((i) => i.id === id);
+    setSelectedIap(iap);
+    setShowDeployModal(true);
+  };
+
+  const handleDeploy = async ({ deployURL, objectives }) => {
+    try {
+      setDeployLoading(true);
+      const response = await fetch(
+        `${API_BASE_URL}/iaps/${selectedIap.id}/deploy`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            deployURL,
+            objectives,
+            user_id: user.id,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Deployment failed");
+      const updatedIap = await response.json();
+
+      // Update IAP list
+      setIaps(iaps.map((i) => (i.id === updatedIap.id ? updatedIap : i)));
+      setShowDeployModal(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeployLoading(false);
+    }
   };
 
   const handleIapInfo = (id) => {
@@ -289,6 +324,14 @@ const MyIaps = () => {
         formData={formData}
         currentIap={currentIap}
         user={user}
+      />
+
+      <IapDeployModal
+        show={showDeployModal}
+        onHide={() => setShowDeployModal(false)}
+        iap={selectedIap}
+        onDeploy={handleDeploy}
+        loading={deployLoading}
       />
     </Container>
   );

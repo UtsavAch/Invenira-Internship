@@ -315,6 +315,33 @@ app.delete("/iaps/:id", async (req, res) => {
 //   }
 // });
 
+// Get analytics for IAP's activities
+app.get("/iaps/:id/analytics", async (req, res) => {
+  try {
+    const analytics = await broker.call("iap.getAnalytics", {
+      id: req.params.id,
+    });
+    res.json(analytics);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// Deploy IAP
+app.post("/iaps/:id/deploy", async (req, res) => {
+  try {
+    const result = await broker.call("iap.deploy", {
+      id: req.params.id,
+      deployURL: req.body.deployURL,
+      objectives: req.body.objectives,
+      user_id: req.body.user_id,
+    });
+    res.json(result);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
 app.get("/activity-connections", async (req, res) => {
   try {
     const connections = await broker.call("activity_connections.list");

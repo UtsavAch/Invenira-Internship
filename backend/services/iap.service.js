@@ -219,5 +219,152 @@ module.exports = {
 		// 	await iap.destroy();
 		// 	return iap;
 		// },
+
+		async getAnalytics(ctx) {
+			try {
+				const iap = await this.adapter.model.findOne({
+					where: { id: ctx.params.id },
+				});
+				if (!iap) throw new MoleculerError("IAP not found", 404);
+
+				const nodes = iap.nodes || [];
+				const activityIds = nodes
+					.map((node) => node.id)
+					.filter((id) => id);
+
+				if (activityIds.length === 0) return [];
+
+				const [analytics] = await this.adapter.db.query(`
+					SELECT a.id, a.name, a.activity_id 
+					FROM invenirabd.analytics a
+					WHERE activity_id IN (${activityIds.join(",")})
+				  `);
+				return analytics;
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to get analytics: ${error.message}`,
+					500
+				);
+			}
+		},
+
+		async deploy(ctx) {
+			const { id, deployURL, objectives, user_id } = ctx.params;
+
+			// Validate inputs
+			if (!deployURL || !objectives || objectives.length === 0) {
+				throw new MoleculerError("Missing required fields", 400);
+			}
+
+			// Check ownership
+			const [ownership] = await this.adapter.db.query(`
+			  SELECT 1 FROM invenirabd.iap_ownership
+			  WHERE users_id = ${user_id} AND iap_id = ${id} AND is_owner = TRUE
+			`);
+			if (!ownership.length) {
+				throw new MoleculerError("Unauthorized", 403);
+			}
+
+			// Get IAP and activities
+			const iap = await this.adapter.model.findOne({ where: { id } });
+			if (!iap) throw new MoleculerError("IAP not found", 404);
+
+			// Get activity IDs from IAP nodes
+			const nodes = iap.nodes || [];
+			const activityIds = nodes
+				.map((node) => node?.id)
+				.filter((id) => {
+					const isValid = Number.isInteger(id) && id > 0;
+					if (!isValid) console.warn("Invalid node ID:", id);
+					return isValid;
+				});
+
+			if (activityIds.length === 0) {
+				throw new MoleculerError(
+					"IAP has no valid activity nodes",
+					400
+				);
+			}
+
+			// Get analytics for these specific activities
+			const [analytics] = await this.adapter.db.query(`
+			  SELECT id, name, activity_id 
+			  FROM invenirabd.analytics
+			  WHERE activity_id IN (${activityIds.join(",")})
+			`);
+
+			// Validate objectives
+			for (const obj of objectives) {
+				const analyticId = parseInt(obj.analytic_id, 10);
+				if (isNaN(analyticId)) {
+					throw new MoleculerError(
+						`Invalid analytic ID: ${obj.analytic_id}`,
+						400
+					);
+				}
+
+				const analyticExists = analytics.some(
+					(a) => a.id === analyticId
+				);
+				if (!analyticExists) {
+					const availableIds = analytics.map((a) => a.id).join(", ");
+					throw new MoleculerError(
+						`Analytic ID ${analyticId} not found in IAP activities. ` +
+							`Available analytic IDs: ${availableIds || "none"}`,
+						400
+					);
+				}
+			}
+
+			// Create deployed_iaps entry
+			const [deployedIap] = await this.adapter.db.query(`
+			  INSERT INTO invenirabd.deployed_iaps 
+			  (name, properties, nodes, edges, objectives, deploy_url)
+			  VALUES (
+				'${iap.name}',
+				'${JSON.stringify(iap.properties)}',
+				'${JSON.stringify(iap.nodes)}',
+				'${JSON.stringify(iap.edges)}',
+				'${JSON.stringify(objectives)}',
+				'${deployURL}'
+			  )
+			  RETURNING *
+			`);
+
+			// Create objectives and link analytics
+			for (const obj of objectives) {
+				// Insert objective
+				const [objectiveRows] = await this.adapter.db.query(`
+					INSERT INTO invenirabd.objective (iap_id, name)
+					VALUES (${id}, '${obj.name}')
+					RETURNING id
+				`);
+				const objectiveId = objectiveRows[0]?.id;
+
+				if (!objectiveId) {
+					throw new MoleculerError("Failed to create objective", 500);
+				}
+
+				// Parse analytic_id to integer
+				const analyticId = parseInt(obj.analytic_id, 10);
+				const analytic = analytics.find((a) => a.id === analyticId);
+
+				// Link to analytic
+				await this.adapter.db.query(`
+					INSERT INTO invenirabd.objective_analytics 
+					(objective_id, analytics_id)
+					VALUES (${objectiveId}, ${analytic.id})
+				`);
+			}
+
+			// Update IAP deployment status
+			await iap.update({ is_deployed: true });
+
+			return {
+				...iap.get(),
+				is_deployed: true,
+				deployed_url: deployURL,
+			};
+		},
 	},
 };
