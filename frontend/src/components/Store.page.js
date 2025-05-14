@@ -45,7 +45,11 @@ const Store = () => {
 
         // Fetch both IAPs and Activities in parallel
         const [iapsResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/deployed-iaps`),
+          fetch(
+            `${API_BASE_URL}/deployed-iaps${
+              user?.id ? `?user_id=${user.id}` : ""
+            }`
+          ),
         ]);
 
         const activitiesResponse = await fetch(
@@ -65,7 +69,7 @@ const Store = () => {
     };
 
     fetchData();
-  }, []);
+  }, [user]);
 
   const filteredIaps = iaps.filter((iap) =>
     iap.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -106,6 +110,37 @@ const Store = () => {
       setError(null);
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const handleAddIap = async (deployedIapId) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/deployed-iaps/${deployedIapId}/add-to-user`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: user?.id }),
+        }
+      );
+
+      const data = await response.json(); // Parse JSON response
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to add IAP");
+      }
+
+      setIaps(
+        iaps.map((i) => (i.id === deployedIapId ? { ...i, is_added: true } : i))
+      );
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      const res = await fetch(
+        `${API_BASE_URL}/deployed-iaps?user_id=${user.id}`
+      );
+      const data = await res.json();
+      setIaps(data);
     }
   };
 
@@ -170,16 +205,21 @@ const Store = () => {
                     <ListGroup.Item
                       key={iap.id}
                       className="d-flex justify-content-between align-items-center"
+                      style={{
+                        backgroundColor: iap.is_owner ? "#e8f5e9" : "inherit",
+                        borderRadius: "4px",
+                        marginBottom: "8px",
+                      }}
                     >
                       <div style={{ maxWidth: "70%" }}>
                         <h5>{iap.name}</h5>
-                        {iap.properties && (
-                          <small className="text-muted d-block">
-                            Properties: {JSON.stringify(iap.properties)}
-                          </small>
-                        )}
                       </div>
-                      <div>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "10px",
+                        }}
+                      >
                         <Button
                           variant="none"
                           size="sm"
@@ -193,6 +233,22 @@ const Store = () => {
                         >
                           <FontAwesomeIcon icon={faInfo} />
                         </Button>
+                        {user && !iap.is_added && !iap.is_owner && (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="me-2"
+                            onClick={() => handleAddIap(iap.id)}
+                          >
+                            <FontAwesomeIcon icon={faPlus} />
+                          </Button>
+                        )}
+                        {iap.is_owner && (
+                          <span className="text-success me-2">Owned</span>
+                        )}
+                        {iap.is_added && !iap.is_owner && (
+                          <span className="text-muted me-2">Added</span>
+                        )}
                       </div>
                     </ListGroup.Item>
                   ))
@@ -219,11 +275,6 @@ const Store = () => {
                     >
                       <div style={{ maxWidth: "70%" }}>
                         <h5>{activity.name}</h5>
-                        {activity.config_url && (
-                          <small className="text-muted d-block">
-                            Config: {activity.config_url}
-                          </small>
-                        )}
                       </div>
                       <div
                         style={{

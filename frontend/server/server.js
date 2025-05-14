@@ -354,28 +354,47 @@ app.get("/activity-connections", async (req, res) => {
 
 /////////////////////////////////////
 ///////////HANDLING DEPLOYED IAPS///////////////////////
+// app.get("/deployed-iaps", async (req, res) => {
+//   try {
+//     const user_id = req.query.user_id;
+//     let deployed_iaps;
+//     if (user_id) {
+//       deployed_iaps = await broker.call("deployed_iaps.getByUserId", {
+//         user_id,
+//       });
+//     } else {
+//       deployed_iaps = await broker.call("deployed_iaps.getAllDeployedIaps");
+//     }
+//     res.json(deployed_iaps);
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
+
 app.get("/deployed-iaps", async (req, res) => {
   try {
-    const deployed_iaps = await broker.call("deployed_iaps.getAllDeployedIaps");
+    const user_id = req.query.user_id;
+    const deployed_iaps = await broker.call(
+      "deployed_iaps.getAllDeployedIaps",
+      { user_id }
+    );
     res.json(deployed_iaps);
   } catch (error) {
     handleError(res, error);
   }
 });
 
-// Delete a deployed IAP
-// app.delete("/deployed-iaps/:id", async (req, res) => {
-//   try {
-//     const { user_id } = req.body;
-//     await broker.call("deployed_iaps.deleteDeployedIap", {
-//       id: req.params.id,
-//       user_id,
-//     });
-//     res.json({ message: "Deployed IAP deleted successfully" });
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
+app.post("/deployed-iaps/:id/add-to-user", async (req, res) => {
+  try {
+    const result = await broker.call("deployed_iaps.addToUser", {
+      deployed_iap_id: req.params.id,
+      user_id: req.body.user_id,
+    });
+    res.json(result);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
 
 /////////////////////////////////////////////////////
 

@@ -270,11 +270,6 @@ const MyActivities = () => {
                   >
                     <div style={{ maxWidth: "70%" }}>
                       <h5>{activity.name}</h5>
-                      {activity.config_url && (
-                        <small className="text-muted d-block">
-                          Config: {activity.config_url}
-                        </small>
-                      )}
                     </div>
                     <div style={{ display: "flex", gap: "10px" }}>
                       <Button

@@ -40,58 +40,28 @@ module.exports = {
 	actions: {
 		//Get all deployed Iaps
 		async getAllDeployedIaps(ctx) {
-			try {
-				const deployedIaps = await this.adapter.model.findAll();
-				return deployedIaps;
-			} catch (error) {
-				throw new MoleculerError(
-					`Failed to retrieve deployed IAPs: ${error.message}`,
-					500
-				);
-			}
+			const { user_id } = ctx.params;
+			let query = `
+			  SELECT di.*, 
+				EXISTS (
+				  SELECT 1 
+				  FROM invenirabd.iap_ownership io 
+				  WHERE io.users_id = ${user_id || "NULL"}
+					AND io.iap_id = di.iap_id
+				) AS is_added,
+				EXISTS (
+				  SELECT 1 
+				  FROM invenirabd.iap_ownership io 
+				  WHERE io.users_id = ${user_id || "NULL"}
+					AND io.iap_id = di.iap_id
+					AND io.is_owner = TRUE
+				) AS is_owner
+			  FROM invenirabd.deployed_iaps di
+			`;
+
+			const [results] = await this.adapter.db.query(query);
+			return results;
 		},
-
-		//Delete a deployed iap
-		// async deleteDeployedIap(ctx) {
-		// 	try {
-		// 		const { id, user_id } = ctx.params;
-
-		// 		// Get the deployed IAP to retrieve its iap_id
-		// 		const deployedIap = await this.adapter.model.findOne({
-		// 			where: { id },
-		// 		});
-		// 		if (!deployedIap) {
-		// 			throw new MoleculerError("Deployed IAP not found", 404);
-		// 		}
-
-		// 		// Check ownership of the original IAP
-		// 		const [ownership] = await this.adapter.db.query(`
-		//     SELECT 1 FROM invenirabd.iap_ownership
-		//     WHERE users_id = ${user_id} AND iap_id = ${deployedIap.iap_id} AND is_owner = TRUE
-		// `);
-		// 		if (!ownership.length) {
-		// 			throw new MoleculerError(
-		// 				"Unauthorized: Not the IAP owner",
-		// 				403
-		// 			);
-		// 		}
-
-		// 		// Delete related iap_activities entries
-		// 		await this.adapter.db.query(
-		// 			`DELETE FROM invenirabd.iap_activities WHERE iap_id = ${id}`
-		// 		);
-
-		// 		// Delete the deployed IAP
-		// 		await this.adapter.model.destroy({ where: { id } });
-
-		// 		return { message: "Deployed IAP deleted successfully" };
-		// 	} catch (error) {
-		// 		throw new MoleculerError(
-		// 			`Failed to delete deployed IAP: ${error.message}`,
-		// 			500
-		// 		);
-		// 	}
-		// },
 
 		//Delete deployed iap using iap id
 		async deleteDeployedIap(ctx) {
@@ -130,6 +100,107 @@ module.exports = {
 			} catch (error) {
 				throw new MoleculerError(
 					`Failed to delete deployed IAP: ${error.message}`,
+					500
+				);
+			}
+		},
+
+		async addToUser(ctx) {
+			try {
+				const { deployed_iap_id, user_id } = ctx.params;
+
+				// Get the original iap_id and check ownership
+				const [result] = await this.adapter.db.query(`
+				SELECT di.iap_id, io.is_owner 
+				FROM invenirabd.deployed_iaps di
+				LEFT JOIN invenirabd.iap_ownership io 
+				ON di.iap_id = io.iap_id 
+				AND io.users_id = ${user_id}
+				WHERE di.id = ${deployed_iap_id}
+			`);
+
+				if (!result.length) {
+					throw new MoleculerError("Deployed IAP not found", 404);
+				}
+
+				const { iap_id, is_owner } = result[0];
+
+				if (is_owner) {
+					throw new MoleculerError(
+						"User is already the owner of this IAP",
+						400
+					);
+				}
+
+				if (result[0].is_owner !== null) {
+					throw new MoleculerError("IAP already added to user", 400);
+				}
+
+				await this.adapter.db.query(`
+				INSERT INTO invenirabd.iap_ownership 
+				(users_id, iap_id)
+				VALUES (${user_id}, ${iap_id})
+			`);
+
+				return { success: true };
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to add IAP to user: ${error.message}`,
+					500
+				);
+			}
+		},
+
+		async getByUserId(ctx) {
+			const { user_id } = ctx.params;
+			const query = `
+			  SELECT di.*, io.is_owner 
+			  FROM invenirabd.deployed_iaps di
+			  JOIN invenirabd.iap_ownership io ON di.iap_id = io.iap_id
+			  WHERE io.users_id = ${user_id}
+			`;
+			const [results] = await this.adapter.db.query(query);
+			return results;
+		},
+
+		async deleteByIapId(ctx) {
+			try {
+				const { iap_id, user_id } = ctx.params;
+
+				// Verify ownership of the original IAP
+				const [ownership] = await this.adapter.db.query(`
+				SELECT 1 FROM invenirabd.iap_ownership
+				WHERE users_id = ${user_id} AND iap_id = ${iap_id} AND is_owner = TRUE
+			`);
+				if (!ownership.length) {
+					throw new MoleculerError(
+						"Unauthorized: Not the IAP owner",
+						403
+					);
+				}
+
+				// Get all deployed IAPs for this original IAP
+				const deployedIaps = await this.adapter.model.findAll({
+					where: { iap_id },
+					attributes: ["id"],
+				});
+
+				// Delete related iap_activities and deployed IAPs
+				for (const deployedIap of deployedIaps) {
+					await this.adapter.db.query(
+						`DELETE FROM invenirabd.iap_activities WHERE iap_id = ${deployedIap.id}`
+					);
+				}
+
+				// Delete the deployed IAPs
+				await this.adapter.model.destroy({
+					where: { iap_id },
+				});
+
+				return { message: "All deployed IAPs deleted successfully" };
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to delete deployed IAPs: ${error.message}`,
 					500
 				);
 			}

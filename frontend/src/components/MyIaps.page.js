@@ -258,11 +258,6 @@ const MyIaps = () => {
                   >
                     <div style={{ maxWidth: "70%" }}>
                       <h5>{iap.name}</h5>
-                      {iap.properties && (
-                        <small className="text-muted d-block">
-                          {Object.keys(iap.properties).length} properties
-                        </small>
-                      )}
                     </div>
                     <div style={{ display: "flex", gap: "10px" }}>
                       <Button

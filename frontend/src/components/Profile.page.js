@@ -55,11 +55,13 @@ export default function ProfilePage() {
 
       setIapLoading(true);
       try {
-        const response = await fetch();
-        // `${API_BASE_URL}/deployed-iaps/user/${user.id}`
-        // Instead the deployed iaps the user added from the store
+        const response = await fetch(
+          `${API_BASE_URL}/deployed-iaps?user_id=${user.id}`
+        );
         const data = await response.json();
-        setDeployedIaps(data);
+
+        const userIaps = data.filter((iap) => iap.is_added || iap.is_owner);
+        setDeployedIaps(userIaps);
       } catch (error) {
         console.error("Failed to fetch deployed IAPs:", error);
       } finally {
@@ -89,7 +91,6 @@ export default function ProfilePage() {
 
   return (
     <Box sx={{ display: "flex" }}>
-      {/* Main Profile Section */}
       <Box
         sx={{
           flex: 1,
@@ -110,13 +111,21 @@ export default function ProfilePage() {
           <Paper elevation={3} sx={{ p: 2 }}>
             <List>
               {deployedIaps.map((iap) => (
-                <ListItem key={iap.id} divider>
-                  <ListItemText
-                    primary={iap.name}
-                    secondary={`Deployed on: ${new Date(
-                      iap.created_at
-                    ).toLocaleDateString()}`}
-                  />
+                <ListItem
+                  key={iap.id}
+                  divider
+                  sx={{
+                    backgroundColor: iap.is_owner ? "#e8f5e9" : "inherit",
+                    borderRadius: "4px",
+                    marginBottom: "8px",
+                  }}
+                >
+                  <ListItemText primary={iap.name} />
+                  {iap.is_owner && (
+                    <Typography variant="caption" color="textSecondary">
+                      (Owner)
+                    </Typography>
+                  )}
                 </ListItem>
               ))}
             </List>
@@ -134,12 +143,7 @@ export default function ProfilePage() {
             <List>
               {activitiesAdded.map((activity) => (
                 <ListItem key={activity.id} divider>
-                  <ListItemText
-                    primary={activity.name}
-                    secondary={`Added on: ${new Date(
-                      activity.added_at
-                    ).toLocaleDateString()}`}
-                  />
+                  <ListItemText primary={activity.name} />
                 </ListItem>
               ))}
             </List>
