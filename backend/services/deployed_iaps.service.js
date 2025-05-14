@@ -32,11 +32,50 @@ module.exports = {
 			nodes: Sequelize.JSON,
 			edges: Sequelize.JSON,
 			objectives: Sequelize.JSON,
-			deploy_URL: Sequelize.STRING,
+			deploy_url: Sequelize.STRING,
 		},
 	},
 
 	actions: {
-		//Actions to be implemented
+		//Get all deployed Iaps
+		async getAllDeployedIaps(ctx) {
+			try {
+				const deployedIaps = await this.adapter.model.findAll();
+				return deployedIaps;
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to retrieve deployed IAPs: ${error.message}`,
+					500
+				);
+			}
+		},
+
+		//Delete a deployed iap
+		async deleteDeployedIap(ctx) {
+			try {
+				const { id } = ctx.params;
+
+				// Delete related entries in iap_activities
+				await this.adapter.db.query(
+					`DELETE FROM invenirabd.iap_activities WHERE iap_id = ${id}`
+				);
+
+				// Delete the deployed IAP
+				const result = await this.adapter.model.destroy({
+					where: { id },
+				});
+
+				if (result === 0) {
+					throw new MoleculerError("Deployed IAP not found", 404);
+				}
+
+				return { message: "Deployed IAP deleted successfully" };
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to delete deployed IAP: ${error.message}`,
+					500
+				);
+			}
+		},
 	},
 };

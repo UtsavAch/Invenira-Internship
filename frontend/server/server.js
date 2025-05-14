@@ -351,6 +351,29 @@ app.get("/activity-connections", async (req, res) => {
   }
 });
 
+/////////////////////////////////////
+///////////HANDLING DEPLOYED IAPS///////////////////////
+app.get("/deployed-iaps", async (req, res) => {
+  try {
+    const deployed_iaps = await broker.call("deployed_iaps.getAllDeployedIaps");
+    res.json(deployed_iaps);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// Delete a deployed IAP
+app.delete("/deployed-iaps/:id", async (req, res) => {
+  try {
+    await broker.call("deployed_iaps.deleteDeployedIap", {
+      id: req.params.id,
+    });
+    res.json({ message: "Deployed IAP deleted successfully" });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
 /////////////////////////////////////////////////////
 
 // Start the server
