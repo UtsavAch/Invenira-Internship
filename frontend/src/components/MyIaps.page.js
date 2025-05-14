@@ -157,7 +157,7 @@ const MyIaps = () => {
     setShowDeployModal(true);
   };
 
-  const handleDeploy = async ({ deployURL, objectives }) => {
+  const handleDeploy = async ({ deployURL, objectives, activityUrls }) => {
     try {
       setDeployLoading(true);
       const response = await fetch(
@@ -168,6 +168,7 @@ const MyIaps = () => {
           body: JSON.stringify({
             deployURL,
             objectives,
+            activityUrls,
             user_id: user.id,
           }),
         }
@@ -176,7 +177,6 @@ const MyIaps = () => {
       if (!response.ok) throw new Error("Deployment failed");
       const updatedIap = await response.json();
 
-      // Update IAP list
       setIaps(iaps.map((i) => (i.id === updatedIap.id ? updatedIap : i)));
       setShowDeployModal(false);
     } catch (err) {

@@ -55,9 +55,9 @@ export default function ProfilePage() {
 
       setIapLoading(true);
       try {
-        const response = await fetch(
-          `http://localhost:8000/deployed-iaps/user/${user.id}`
-        );
+        const response = await fetch();
+        // `${API_BASE_URL}/deployed-iaps/user/${user.id}`
+        // Instead the deployed iaps the user added from the store
         const data = await response.json();
         setDeployedIaps(data);
       } catch (error) {
@@ -98,12 +98,8 @@ export default function ProfilePage() {
           backgroundColor: "#f9f9f9",
         }}
       >
-        <Typography variant="h4" sx={{ mb: 3 }}>
-          PROFILE
-        </Typography>
-
         <Typography variant="h5" sx={{ mb: 2 }}>
-          My Deployed IAPs
+          Your IAP collection
         </Typography>
 
         {iapLoading ? (
@@ -128,7 +124,7 @@ export default function ProfilePage() {
         )}
 
         <Typography variant="h5" sx={{ mb: 2, mt: 4 }}>
-          Activities You Added
+          Your activity Collection
         </Typography>
 
         {iapLoading ? (

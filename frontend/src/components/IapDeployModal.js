@@ -12,6 +12,7 @@ const IapDeployModal = ({ show, onHide, iap, onDeploy, loading }) => {
   const [deployURL, setDeployURL] = useState("");
   const [analyticsOptions, setAnalyticsOptions] = useState([]);
   const [error, setError] = useState("");
+  const [activityUrls, setActivityUrls] = useState({});
 
   useEffect(() => {
     if (show && iap) {
@@ -46,9 +47,21 @@ const IapDeployModal = ({ show, onHide, iap, onDeploy, loading }) => {
     setObjectives(newObjectives);
   };
 
+  const handleActivityUrlChange = (activityId, value) => {
+    setActivityUrls((prev) => ({
+      ...prev,
+      [activityId]: value,
+    }));
+  };
+
   const handleSubmit = () => {
+    const missingUrls = iap?.nodes?.filter((node) => !activityUrls[node.id]);
     if (!deployURL) {
       setError("Deploy URL is required");
+      return;
+    }
+    if (missingUrls?.length > 0) {
+      setError("All activities must have a deployment URL");
       return;
     }
     if (
@@ -57,7 +70,11 @@ const IapDeployModal = ({ show, onHide, iap, onDeploy, loading }) => {
       setError("All objective fields are required");
       return;
     }
-    onDeploy({ deployURL, objectives });
+    onDeploy({
+      deployURL,
+      objectives,
+      activityUrls,
+    });
   };
 
   return (
@@ -127,6 +144,30 @@ const IapDeployModal = ({ show, onHide, iap, onDeploy, loading }) => {
                 <Button variant="danger" onClick={() => removeObjective(index)}>
                   <FontAwesomeIcon icon={faTimes} />
                 </Button>
+              </Col>
+            </Row>
+          ))}
+        </Form.Group>
+        <Form.Group className="mb-4">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5>Activity Deployment URLs</h5>
+          </div>
+
+          {iap?.nodes?.map((node) => (
+            <Row key={node.id} className="mb-3">
+              <Col md={4}>
+                <Form.Label>{node.name}</Form.Label>
+              </Col>
+              <Col md={6}>
+                <Form.Control
+                  type="text"
+                  placeholder="Deployment URL"
+                  value={activityUrls[node.id] || ""}
+                  onChange={(e) =>
+                    handleActivityUrlChange(node.id, e.target.value)
+                  }
+                  required
+                />
               </Col>
             </Row>
           ))}

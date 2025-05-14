@@ -271,17 +271,23 @@ module.exports = {
 		},
 
 		async deploy(ctx) {
-			const { id, deployURL, objectives, user_id } = ctx.params;
+			const { id, deployURL, objectives, user_id, activityUrls } =
+				ctx.params;
 
 			// Validate inputs
-			if (!deployURL || !objectives || objectives.length === 0) {
+			if (
+				!deployURL ||
+				!objectives ||
+				objectives.length === 0 ||
+				!activityUrls
+			) {
 				throw new MoleculerError("Missing required fields", 400);
 			}
 
 			// Check ownership
 			const [ownership] = await this.adapter.db.query(`
-			  SELECT 1 FROM invenirabd.iap_ownership
-			  WHERE users_id = ${user_id} AND iap_id = ${id} AND is_owner = TRUE
+				SELECT 1 FROM invenirabd.iap_ownership
+				WHERE users_id = ${user_id} AND iap_id = ${id} AND is_owner = TRUE
 			`);
 			if (!ownership.length) {
 				throw new MoleculerError("Unauthorized", 403);
@@ -291,51 +297,19 @@ module.exports = {
 			const iap = await this.adapter.model.findOne({ where: { id } });
 			if (!iap) throw new MoleculerError("IAP not found", 404);
 
-			// Get activity IDs from IAP nodes
+			// Validate activity URLs
 			const nodes = iap.nodes || [];
-			const activityIds = nodes
-				.map((node) => node?.id)
-				.filter((id) => {
-					const isValid = Number.isInteger(id) && id > 0;
-					if (!isValid) console.warn("Invalid node ID:", id);
-					return isValid;
-				});
+			const missingUrls = nodes.filter(
+				(node) =>
+					!(activityUrls[node.id] && activityUrls[node.id].trim()) ||
+					!Number.isInteger(node.id)
+			);
 
-			if (activityIds.length === 0) {
+			if (missingUrls.length > 0) {
 				throw new MoleculerError(
-					"IAP has no valid activity nodes",
+					"All activities must have valid deployment URLs",
 					400
 				);
-			}
-
-			// Get analytics for these specific activities
-			const [analytics] = await this.adapter.db.query(`
-			  SELECT id, name, activity_id 
-			  FROM invenirabd.analytics
-			  WHERE activity_id IN (${activityIds.join(",")})
-			`);
-
-			// Validate objectives
-			for (const obj of objectives) {
-				const analyticId = parseInt(obj.analytic_id, 10);
-				if (isNaN(analyticId)) {
-					throw new MoleculerError(
-						`Invalid analytic ID: ${obj.analytic_id}`,
-						400
-					);
-				}
-
-				const analyticExists = analytics.some(
-					(a) => a.id === analyticId
-				);
-				if (!analyticExists) {
-					const availableIds = analytics.map((a) => a.id).join(", ");
-					throw new MoleculerError(
-						`Analytic ID ${analyticId} not found in IAP activities. ` +
-							`Available analytic IDs: ${availableIds || "none"}`,
-						400
-					);
-				}
 			}
 
 			// Create deployed_iaps entry
@@ -344,40 +318,60 @@ module.exports = {
 				(iap_id, name, properties, nodes, edges, objectives, deploy_url)
 				VALUES (
 					${id},
-					'${iap.name}',
+					'${iap.name.replace(/'/g, "''")}',
 					'${JSON.stringify(iap.properties)}',
-					'${JSON.stringify(iap.nodes)}',
+					'${JSON.stringify(nodes)}',
 					'${JSON.stringify(iap.edges)}',
 					'${JSON.stringify(objectives)}',
-					'${deployURL}'
+					'${deployURL.replace(/'/g, "''")}'
 				)
 				RETURNING *
 			`);
 
+			// Create iap_activities entries
+			for (const node of nodes) {
+				await this.adapter.db.query(`
+					INSERT INTO invenirabd.iap_activities 
+					(iap_id, activity_id, act_name, deployment_url)
+					VALUES (
+						${deployedIap[0].id},
+						${node.id},
+						'${node.name.replace(/'/g, "''")}',
+						'${activityUrls[node.id].replace(/'/g, "''")}'
+					)
+				`);
+			}
+
 			// Create objectives and link analytics
+			const [analytics] = await this.adapter.db.query(`
+				SELECT id, activity_id 
+				FROM invenirabd.analytics
+				WHERE activity_id IN (${nodes.map((n) => n.id).join(",")})
+			`);
+
 			for (const obj of objectives) {
 				// Insert objective
 				const [objectiveRows] = await this.adapter.db.query(`
 					INSERT INTO invenirabd.objective (iap_id, name)
-					VALUES (${id}, '${obj.name}')
+					VALUES (${id}, '${obj.name.replace(/'/g, "''")}')
 					RETURNING id
 				`);
-				const objectiveId = objectiveRows[0]?.id;
-
-				if (!objectiveId) {
+				if (!objectiveRows || !objectiveRows[0]) {
 					throw new MoleculerError("Failed to create objective", 500);
 				}
+				const objectiveId = objectiveRows[0].id;
 
-				// Parse analytic_id to integer
+				// Link to analytic
 				const analyticId = parseInt(obj.analytic_id, 10);
 				const analytic = analytics.find((a) => a.id === analyticId);
 
-				// Link to analytic
-				await this.adapter.db.query(`
-					INSERT INTO invenirabd.objective_analytics 
-					(objective_id, analytics_id)
-					VALUES (${objectiveId}, ${analytic.id})
-				`);
+				if (analytic) {
+					await this.adapter.db.query(`
+						INSERT INTO invenirabd.objective_analytics 
+						(objective_id, analytics_id)
+						VALUES (${objectiveId}, ${analytic.id})
+					`);
+				}
 			}
 
 			// Update IAP deployment status
@@ -387,6 +381,7 @@ module.exports = {
 				...iap.get(),
 				is_deployed: true,
 				deployed_url: deployURL,
+				activity_urls: activityUrls,
 			};
 		},
 	},

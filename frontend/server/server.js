@@ -334,6 +334,7 @@ app.post("/iaps/:id/deploy", async (req, res) => {
       id: req.params.id,
       deployURL: req.body.deployURL,
       objectives: req.body.objectives,
+      activityUrls: req.body.activityUrls,
       user_id: req.body.user_id,
     });
     res.json(result);
@@ -363,18 +364,18 @@ app.get("/deployed-iaps", async (req, res) => {
 });
 
 // Delete a deployed IAP
-app.delete("/deployed-iaps/:id", async (req, res) => {
-  try {
-    const { user_id } = req.body;
-    await broker.call("deployed_iaps.deleteDeployedIap", {
-      id: req.params.id,
-      user_id,
-    });
-    res.json({ message: "Deployed IAP deleted successfully" });
-  } catch (error) {
-    handleError(res, error);
-  }
-});
+// app.delete("/deployed-iaps/:id", async (req, res) => {
+//   try {
+//     const { user_id } = req.body;
+//     await broker.call("deployed_iaps.deleteDeployedIap", {
+//       id: req.params.id,
+//       user_id,
+//     });
+//     res.json({ message: "Deployed IAP deleted successfully" });
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
 
 /////////////////////////////////////////////////////
 
