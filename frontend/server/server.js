@@ -365,8 +365,10 @@ app.get("/deployed-iaps", async (req, res) => {
 // Delete a deployed IAP
 app.delete("/deployed-iaps/:id", async (req, res) => {
   try {
+    const { user_id } = req.body;
     await broker.call("deployed_iaps.deleteDeployedIap", {
       id: req.params.id,
+      user_id,
     });
     res.json({ message: "Deployed IAP deleted successfully" });
   } catch (error) {

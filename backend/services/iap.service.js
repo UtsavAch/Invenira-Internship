@@ -181,9 +181,10 @@ module.exports = {
 			try {
 				const { id, user_id } = ctx.params;
 
+				// Ownership check
 				const [ownership] = await this.adapter.db.query(
 					`SELECT 1 FROM invenirabd.iap_ownership
-		             WHERE users_id = ${user_id} AND iap_id = ${id} AND is_owner = TRUE`
+					 WHERE users_id = ${user_id} AND iap_id = ${id} AND is_owner = TRUE`
 				);
 				if (!ownership.length) {
 					throw new MoleculerError(
@@ -192,13 +193,34 @@ module.exports = {
 					);
 				}
 
+				// Delete objectives and their analytics
+				await this.adapter.db.query(`
+					DELETE FROM invenirabd.objective_analytics 
+					WHERE objective_id IN (
+						SELECT id FROM invenirabd.objective 
+						WHERE iap_id = ${id}
+					)
+				`);
+				await this.adapter.db.query(`
+					DELETE FROM invenirabd.objective 
+					WHERE iap_id = ${id}
+				`);
+
+				// Delete related deployed IAPs
+				await ctx.call("deployed_iaps.deleteByIapId", {
+					iap_id: id,
+					user_id,
+				});
+
+				// Delete activity connections and ownership
 				await ctx.call("activity_connections.deleteByIap", {
 					iap_id: id,
 				});
-
 				await this.adapter.db.query(
 					`DELETE FROM invenirabd.iap_ownership WHERE iap_id = ${id}`
 				);
+
+				// Finally, delete the IAP
 				await this.adapter.model.destroy({ where: { id } });
 
 				return { message: "IAP deleted successfully" };
@@ -318,17 +340,18 @@ module.exports = {
 
 			// Create deployed_iaps entry
 			const [deployedIap] = await this.adapter.db.query(`
-			  INSERT INTO invenirabd.deployed_iaps 
-			  (name, properties, nodes, edges, objectives, deploy_url)
-			  VALUES (
-				'${iap.name}',
-				'${JSON.stringify(iap.properties)}',
-				'${JSON.stringify(iap.nodes)}',
-				'${JSON.stringify(iap.edges)}',
-				'${JSON.stringify(objectives)}',
-				'${deployURL}'
-			  )
-			  RETURNING *
+				INSERT INTO invenirabd.deployed_iaps 
+				(iap_id, name, properties, nodes, edges, objectives, deploy_url)
+				VALUES (
+					${id},
+					'${iap.name}',
+					'${JSON.stringify(iap.properties)}',
+					'${JSON.stringify(iap.nodes)}',
+					'${JSON.stringify(iap.edges)}',
+					'${JSON.stringify(objectives)}',
+					'${deployURL}'
+				)
+				RETURNING *
 			`);
 
 			// Create objectives and link analytics

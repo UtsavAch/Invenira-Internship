@@ -60,6 +60,7 @@ CREATE TABLE iaps(
 
 CREATE TABLE deployed_iaps(
     id SERIAL PRIMARY KEY,
+    iap_id INTEGER REFERENCES iaps(id), --Added iap_id, since deployed_iaps are related to iaps
     name VARCHAR(256) NOT NULL,
     properties JSON,
     nodes JSON,
