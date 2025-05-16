@@ -72,7 +72,8 @@ module.exports = {
 
 				// Insert into users_activities
 				await this.adapter.db.query(
-					`INSERT INTO invenirabd.users_activities (users_id, activity_id) VALUES (${user_id}, ${activity.id})`
+					`INSERT INTO invenirabd.users_activities (users_id, activity_id, is_owner) 
+					 VALUES (${user_id}, ${activity.id}, TRUE)`
 				);
 
 				return activity;
@@ -92,40 +93,65 @@ module.exports = {
 		 */
 		async remove(ctx) {
 			const { id, user_id } = ctx.params;
+			const transaction = await this.adapter.db.transaction(); // Start transaction
+
 			try {
-				// Ownership check
+				// Ownership check (outside transaction as it's a read operation)
 				const [ownership] = await this.adapter.db.query(
 					`SELECT 1 FROM "invenirabd".users_activities 
-					 WHERE users_id = ${user_id} AND activity_id = ${id}`
+					 WHERE users_id = ${user_id} 
+					 AND activity_id = ${id} 
+					 AND is_owner = TRUE`
 				);
 				if (ownership.length === 0) {
+					await transaction.rollback();
 					throw new MoleculerError(
 						"Unauthorized: Not the activity owner",
 						403
 					);
 				}
 
-				// Connection check
+				// Connection check (should also be in transaction if it writes)
 				const connections = await ctx.call(
 					"activity_connections.getByActivity",
-					{ activity_id: id }
+					{
+						activity_id: id,
+					}
 				);
 				if (connections.length > 0) {
+					await transaction.rollback();
 					throw new MoleculerError(
 						"Activity is used in IAP connections and cannot be deleted",
 						400
 					);
 				}
 
-				// Delete from users_activities and activities
+				// Delete analytics
 				await this.adapter.db.query(
-					`DELETE FROM "invenirabd".users_activities WHERE activity_id = ${id}`
+					`DELETE FROM "invenirabd".analytics WHERE activity_id = ${id}`,
+					{ transaction }
 				);
-				await this.adapter.model.destroy({ where: { id } });
 
+				// Delete user associations
+				await this.adapter.db.query(
+					`DELETE FROM "invenirabd".users_activities WHERE activity_id = ${id}`,
+					{ transaction }
+				);
+
+				// Delete activity
+				await this.adapter.model.destroy({
+					where: { id },
+					transaction,
+				});
+
+				await transaction.commit(); // Commit if all succeed
 				return;
 			} catch (error) {
-				throw new MoleculerError(error.message, error.code || 500);
+				await transaction.rollback(); // Rollback on any error
+				throw new MoleculerError(
+					error.message || "Failed to delete activity",
+					error.code || 500
+				);
 			}
 		},
 
@@ -149,7 +175,9 @@ module.exports = {
 				// 2. Check ownership via users_activities table
 				const [ownership] = await this.adapter.db.query(
 					`SELECT 1 FROM "invenirabd".users_activities 
-				 WHERE users_id = ${user_id} AND activity_id = ${id}`
+					 WHERE users_id = ${user_id} 
+					 AND activity_id = ${id} 
+					 AND is_owner = TRUE`
 				);
 
 				if (ownership.length === 0) {
@@ -196,29 +224,52 @@ module.exports = {
 		 * @returns {Array} List of available Activities
 		 */
 		async list(ctx) {
-			const { all, name, user_id, deployed } = ctx.params;
+			const { all, name, user_id, deployed, owner, profile } = ctx.params;
 
 			if (all) {
 				return await this.adapter.model.findAll();
 			}
 
-			// if (user_id) {
-			// 	const [results] = await this.adapter.db.query(
-			// 		`SELECT a.*
-			// 	 FROM "invenirabd".activities a
-			// 	 JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
-			// 	 WHERE ua.users_id = ${user_id}`
-			// 	);
-			// 	return results;
-			// }
 			if (user_id) {
-				const [results] = await this.adapter.db.query(
-					`SELECT a.*
-					 FROM "invenirabd".activities a
-					 JOIN "invenirabd".users_activities ua ON a.id = ua.activity_id
-					 WHERE ua.users_id = ${user_id}
-					 ${deployed !== undefined ? "AND a.is_deployed = " + deployed : ""}`
-				);
+				let query;
+				if (owner) {
+					// Fetch activities where the user is the owner (regardless of deployment status)
+					query = `
+					SELECT a.* 
+					FROM "invenirabd".activities a
+					INNER JOIN "invenirabd".users_activities ua 
+					  ON a.id = ua.activity_id 
+					  AND ua.users_id = ${user_id}
+					  AND ua.is_owner = TRUE
+				  `;
+				} else if (profile) {
+					//Get activities where user is owner OR has added
+					query = `
+					SELECT 
+					a.*,
+					ua.is_owner as is_owner,
+					(ua.is_owner = FALSE) as is_added
+					FROM "invenirabd".activities a
+					INNER JOIN "invenirabd".users_activities ua 
+					ON a.id = ua.activity_id 
+					AND ua.users_id = ${user_id}
+					WHERE a.is_deployed = TRUE 
+				`;
+				} else {
+					// Existing query for deployed activities user has access to
+					query = `
+					SELECT 
+					  a.*, 
+					  COALESCE(ua.is_owner, FALSE) as is_owner,
+					  (ua.activity_id IS NOT NULL AND ua.is_owner = FALSE) as is_added
+					FROM "invenirabd".activities a
+					LEFT JOIN "invenirabd".users_activities ua 
+					  ON a.id = ua.activity_id 
+					  AND ua.users_id = ${user_id}
+					WHERE a.is_deployed = TRUE
+				  `;
+				}
+				const [results] = await this.adapter.db.query(query);
 				return results;
 			}
 

@@ -37,7 +37,7 @@ export default function ProfilePage() {
 
       try {
         const response = await fetch(
-          `${API_BASE_URL}/activities?user_id=${user.id}&deployed=true`
+          `${API_BASE_URL}/activities?user_id=${user.id}&profile=true`
         );
         const data = await response.json();
         setActivitiesAdded(data);
@@ -142,9 +142,16 @@ export default function ProfilePage() {
           <Paper elevation={3} sx={{ p: 2 }}>
             <List>
               {activitiesAdded.map((activity) => (
-                <ListItem key={activity.id} divider>
-                  <ListItemText primary={activity.name} />
-                </ListItem>
+                <div
+                  key={activity.id}
+                  style={{
+                    backgroundColor: activity.is_owner ? "#e8f5e9" : "white",
+                    padding: "10px",
+                    margin: "5px",
+                  }}
+                >
+                  {activity.name} {activity.is_owner && "(Owned)"}
+                </div>
               ))}
             </List>
           </Paper>

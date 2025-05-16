@@ -93,6 +93,7 @@ CREATE TABLE analytics(
 CREATE TABLE users_activities(
     users_id INTEGER REFERENCES users(id),
     activity_id INTEGER REFERENCES activities(id),
+    is_owner BOOLEAN NOT NULL DEFAULT FALSE, --Added ownership, since a user can own an activity or just add it
     PRIMARY KEY(users_id, activity_id)
 );
 

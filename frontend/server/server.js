@@ -123,6 +123,8 @@ app.get("/activities", async (req, res) => {
       name: req.query.name,
       user_id: req.query.user_id,
       deployed: req.query.deployed,
+      owner: req.query.owner,
+      profile: req.query.profile,
     });
     res.json(activities);
   } catch (error) {

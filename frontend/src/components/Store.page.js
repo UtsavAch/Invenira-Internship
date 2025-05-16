@@ -53,7 +53,9 @@ const Store = () => {
         ]);
 
         const activitiesResponse = await fetch(
-          `${API_BASE_URL}/activities?deployed=true`
+          `${API_BASE_URL}/activities?deployed=true${
+            user?.id ? `&user_id=${user.id}` : ""
+          }`
         );
 
         const iapsData = await iapsResponse.json();
@@ -262,26 +264,28 @@ const Store = () => {
           </Card>
 
           {/* Activities Section */}
+          {/* Activities Section */}
           <Card>
             <Card.Header as="h5">Activities</Card.Header>
             <Card.Body>
               <ListGroup>
                 {filteredActivities.length > 0 ? (
                   filteredActivities.map((activity) => (
-                    // In Store.page.js, update the activity list item
                     <ListGroup.Item
                       key={activity.id}
                       className="d-flex justify-content-between align-items-center"
+                      style={{
+                        backgroundColor: activity.is_owner
+                          ? "#e8f5e9"
+                          : "inherit",
+                        borderRadius: "4px",
+                        marginBottom: "8px",
+                      }}
                     >
                       <div style={{ maxWidth: "70%" }}>
                         <h5>{activity.name}</h5>
                       </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "10px",
-                        }}
-                      >
+                      <div style={{ display: "flex", gap: "10px" }}>
                         <Button
                           variant="none"
                           size="sm"
@@ -295,18 +299,22 @@ const Store = () => {
                         >
                           <FontAwesomeIcon icon={faInfo} />
                         </Button>
-                        {user && !activity.is_added && (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            className="me-2"
-                            onClick={() => handleAddActivity(activity.id)}
-                          >
-                            <FontAwesomeIcon icon={faPlus} />
-                          </Button>
-                        )}
-                        {activity.is_added && (
-                          <span className="text-muted me-2">Added</span>
+                        {user && (
+                          <div>
+                            {activity.is_owner ? (
+                              <span className="text-success me-2">Owned</span>
+                            ) : activity.is_added ? (
+                              <span className="text-muted me-2">Added</span>
+                            ) : (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleAddActivity(activity.id)}
+                              >
+                                <FontAwesomeIcon icon={faPlus} />
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </ListGroup.Item>
