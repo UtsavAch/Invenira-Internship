@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../contexts/user.context";
 import {
   Typography,
@@ -7,7 +8,9 @@ import {
   ListItem,
   ListItemText,
   Paper,
+  Button,
 } from "@mui/material";
+
 import PersonalInfo from "../components/PersonalInfo";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -17,6 +20,7 @@ export default function ProfilePage() {
   const [deployedIaps, setDeployedIaps] = useState([]);
   const [iapLoading, setIapLoading] = useState(false);
   const [activitiesAdded, setActivitiesAdded] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -118,14 +122,26 @@ export default function ProfilePage() {
                     backgroundColor: iap.is_owner ? "#e8f5e9" : "inherit",
                     borderRadius: "4px",
                     marginBottom: "8px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
                   <ListItemText primary={iap.name} />
-                  {iap.is_owner && (
-                    <Typography variant="caption" color="textSecondary">
-                      (Owner)
-                    </Typography>
-                  )}
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    {iap.is_owner && (
+                      <Typography variant="caption" color="textSecondary">
+                        (Owner)
+                      </Typography>
+                    )}
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => navigate(`/deployed-iaps/${iap.id}`)}
+                    >
+                      Start
+                    </Button>
+                  </Box>
                 </ListItem>
               ))}
             </List>

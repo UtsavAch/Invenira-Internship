@@ -1,0 +1,143 @@
+const { MoleculerError } = require("moleculer").Errors;
+const Sequelize = require("sequelize");
+
+module.exports = {
+	name: "progress",
+
+	async started() {
+		this.sequelize = new Sequelize(
+			"postgres://uutsavacharya15@localhost:5432/inveniraBD?schema=invenirabd",
+			{
+				dialect: "postgres",
+				logging: false,
+				define: {
+					timestamps: false,
+				},
+				dialectOptions: {
+					prependSearchPath: true,
+				},
+				searchPath: "invenirabd",
+			}
+		);
+		await this.sequelize.authenticate();
+	},
+
+	async stopped() {
+		if (this.sequelize) {
+			await this.sequelize.close();
+		}
+	},
+
+	actions: {
+		async recordProgress(ctx) {
+			const { user_id, activity_id, deployed_iap_id, progress } =
+				ctx.params;
+
+			try {
+				const transaction = await this.sequelize.transaction();
+
+				// 1. Create or update analytics record with users_id (correct column name)
+				const [existing] = await this.sequelize.query(
+					`SELECT id FROM invenirabd.analytics 
+                     WHERE activity_id = :activity_id AND users_id = :user_id`,
+					{
+						replacements: { activity_id, user_id },
+						transaction,
+						type: Sequelize.QueryTypes.SELECT,
+					}
+				);
+
+				let analyticId;
+				if (existing && existing.length > 0) {
+					analyticId = existing[0].id;
+					await this.sequelize.query(
+						`UPDATE invenirabd.analytics 
+                         SET score = :progress 
+                         WHERE id = :analyticId`,
+						{
+							replacements: { progress, analyticId },
+							transaction,
+							type: Sequelize.QueryTypes.UPDATE,
+						}
+					);
+				} else {
+					const [newRecord] = await this.sequelize.query(
+						`INSERT INTO invenirabd.analytics 
+                         (activity_id, users_id, name, score)
+                         VALUES (:activity_id, :user_id, 'User Progress', :progress)
+                         RETURNING id`,
+						{
+							replacements: { activity_id, user_id, progress },
+							transaction,
+							type: Sequelize.QueryTypes.INSERT,
+						}
+					);
+					analyticId = newRecord[0].id;
+				}
+
+				// ... rest of the function ...
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to record progress: ${error.message}`,
+					500
+				);
+			}
+		},
+
+		async getActivityProgress(ctx) {
+			const { user_id, activity_id } = ctx.params;
+
+			try {
+				const [result] = await this.sequelize.query(
+					`SELECT score FROM invenirabd.analytics 
+                     WHERE activity_id = :activity_id 
+                     AND users_id = :user_id`,
+					{
+						replacements: { activity_id, user_id },
+						type: Sequelize.QueryTypes.SELECT,
+					}
+				);
+
+				return result ? result.score : 0;
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to get activity progress: ${error.message}`,
+					500
+				);
+			}
+		},
+
+		async getObjectiveProgress(ctx) {
+			const { user_id, deployed_iap_id } = ctx.params;
+
+			try {
+				const results = await this.sequelize.query(
+					`
+                    SELECT o.id, o.name, COALESCE(MAX(a.score), 0) AS progress
+                    FROM invenirabd.objective o
+                    LEFT JOIN invenirabd.objective_analytics oa ON o.id = oa.objective_id
+                    LEFT JOIN invenirabd.analytics a ON oa.analytics_id = a.id
+                    WHERE o.iap_id = (
+                        SELECT iap_id 
+                        FROM invenirabd.deployed_iaps 
+                        WHERE id = :deployed_iap_id
+                    )
+                    AND a.users_id = :user_id
+                    GROUP BY o.id, o.name
+                    `,
+					{
+						replacements: { deployed_iap_id, user_id },
+						type: Sequelize.QueryTypes.SELECT,
+					}
+				);
+
+				return results;
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to get progress: ${error.message}`,
+					500
+				);
+			}
+		},
+	},
+};

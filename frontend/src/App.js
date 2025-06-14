@@ -11,6 +11,7 @@ import MyIaps from "./components/MyIaps.page";
 import MyActivities from "./components/MyActivities.page";
 import Store from "./components/Store.page";
 import UsersManager from "./components/UsersManager.page";
+import DeployedIapPage from "./components/DeployedIap.page";
 
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
@@ -57,6 +58,7 @@ class App extends Component {
               <Route exact path="/login" element={<Login />} />
               <Route exact path="/signup" element={<Signup />} />
               <Route exact path="/profile" element={<Profile />} />
+              <Route path="/deployed-iaps/:id" element={<DeployedIapPage />} />
 
               {/* We are protecting our Home Page from unauthenticated */}
               {/* users by wrapping it with PrivateRoute here. Put private pages here*/}

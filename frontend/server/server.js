@@ -12,6 +12,7 @@ const broker = new ServiceBroker({
 });
 
 broker.loadService("../../backend/services/activity_connections.service.js");
+broker.loadService("../../backend/services/progress.service.js");
 broker.loadService("../../backend/services/users.service.js");
 broker.loadService("../../backend/services/activity.service.js");
 broker.loadService("../../backend/services/iap.service.js");
@@ -398,8 +399,79 @@ app.post("/deployed-iaps/:id/add-to-user", async (req, res) => {
   }
 });
 
-/////////////////////////////////////////////////////
+// Get a deployed IAP by ID
+app.get("/deployed-iaps/:id", async (req, res) => {
+  try {
+    const deployedIap = await broker.call("deployed_iaps.getDeployedIap", {
+      id: req.params.id,
+    });
+    res.json(deployedIap);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
 
+// Get objectives for a deployed IAP
+app.get("/deployed-iaps/:id/objectives", async (req, res) => {
+  try {
+    const objectives = await broker.call("deployed_iaps.getObjectives", {
+      id: req.params.id,
+    });
+    res.json(objectives);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// Get activities for a deployed IAP
+app.get("/deployed-iaps/:id/activities", async (req, res) => {
+  try {
+    const activities = await broker.call("deployed_iaps.getActivities", {
+      id: req.params.id,
+    });
+    res.json(activities);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+/////////////////////////////////////////////////////
+// Activity Progress
+app.post("/progress", async (req, res) => {
+  try {
+    const result = await broker.call("progress.recordProgress", req.body);
+    res.json(result);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+app.get("/activity-progress", async (req, res) => {
+  try {
+    const { user_id, activity_id } = req.query;
+    const progress = await broker.call("progress.getActivityProgress", {
+      user_id,
+      activity_id,
+    });
+    res.json({ progress });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+app.get("/deployed-iaps/:id/objectives-progress", async (req, res) => {
+  try {
+    const progress = await broker.call("progress.getObjectiveProgress", {
+      deployed_iap_id: req.params.id,
+      user_id: req.query.user_id,
+    });
+    res.json(progress);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+/////////////////////////////////////////////////////
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

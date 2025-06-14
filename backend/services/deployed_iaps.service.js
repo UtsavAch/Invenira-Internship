@@ -205,5 +205,36 @@ module.exports = {
 				);
 			}
 		},
+
+		async getDeployedIap(ctx) {
+			const { id } = ctx.params;
+			const deployedIap = await this.adapter.model.findOne({
+				where: { id },
+			});
+			if (!deployedIap) {
+				throw new MoleculerError("Deployed IAP not found", 404);
+			}
+			return deployedIap;
+		},
+
+		async getObjectives(ctx) {
+			const { id } = ctx.params;
+			const deployedIap = await this.adapter.model.findOne({
+				where: { id },
+			});
+			if (!deployedIap) {
+				throw new MoleculerError("Deployed IAP not found", 404);
+			}
+			const query = `SELECT * FROM invenirabd.objective WHERE iap_id = ${deployedIap.iap_id}`;
+			const [objectives] = await this.adapter.db.query(query);
+			return objectives;
+		},
+
+		async getActivities(ctx) {
+			const { id } = ctx.params;
+			const query = `SELECT * FROM invenirabd.iap_activities WHERE iap_id = ${id}`;
+			const [activities] = await this.adapter.db.query(query);
+			return activities;
+		},
 	},
 };
