@@ -118,6 +118,18 @@ CREATE TABLE objective_analytics(
     PRIMARY KEY(objective_id, analytics_id)
 );
 
+--Added scores table to track the scores of the user
+CREATE TABLE IF NOT EXISTS scores (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    analytics_id INTEGER NOT NULL,
+    objective_id INTEGER NOT NULL,
+    score INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (analytics_id) REFERENCES analytics(id),
+    FOREIGN KEY (objective_id) REFERENCES objective(id)
+);
+
 --triggers
 
 -- CREATE FUNCTION check_iap_ownership()

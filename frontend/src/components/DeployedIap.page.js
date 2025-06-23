@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useMemo } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import {
   Typography,
@@ -11,7 +11,6 @@ import {
   Button,
   Modal,
   Slider,
-  LinearProgress,
 } from "@mui/material";
 import { UserContext } from "../contexts/user.context";
 
@@ -33,7 +32,6 @@ export default function DeployedIapPage() {
   const { id } = useParams();
   const { user } = useContext(UserContext);
   const [deployedIap, setDeployedIap] = useState(null);
-  const [objectives, setObjectives] = useState([]);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,14 +54,6 @@ export default function DeployedIapPage() {
         const iapData = await iapRes.json();
         setDeployedIap(iapData);
 
-        // Fetch objectives
-        const objRes = await fetch(
-          `${API_BASE_URL}/deployed-iaps/${id}/objectives`
-        );
-        if (!objRes.ok) throw new Error("Failed to fetch objectives");
-        const objData = await objRes.json();
-        setObjectives(Array.isArray(objData) ? objData : []);
-
         // Fetch activities
         const actRes = await fetch(
           `${API_BASE_URL}/deployed-iaps/${id}/activities`
@@ -81,30 +71,6 @@ export default function DeployedIapPage() {
 
     fetchData();
   }, [id]);
-
-  // Calculate objective progress based on activity progress
-  const objectivesWithProgress = useMemo(() => {
-    if (!activities.length || !objectives.length) {
-      return objectives.map((obj) => ({ ...obj, progress: 0 }));
-    }
-
-    return objectives.map((obj) => {
-      // Find activities for this objective
-      const objActivities = activities.filter(
-        (act) => act.objective_id === obj.id
-      );
-
-      if (!objActivities.length) return { ...obj, progress: 0 };
-
-      // Calculate average progress
-      const totalProgress = objActivities.reduce((sum, activity) => {
-        return sum + (activityProgress[activity.activity_id] || 0);
-      }, 0);
-
-      const average = Math.round(totalProgress / objActivities.length);
-      return { ...obj, progress: average };
-    });
-  }, [objectives, activities, activityProgress]);
 
   const handleOpenActivity = (activity) => {
     setSelectedActivity(activity);
@@ -221,38 +187,6 @@ export default function DeployedIapPage() {
         {deployedIap.name}
       </Typography>
 
-      <Typography variant="h5" gutterBottom>
-        Objectives
-      </Typography>
-      <Paper elevation={3} sx={{ mb: 3, p: 2 }}>
-        <List>
-          {objectivesWithProgress.length > 0 ? (
-            objectivesWithProgress.map((obj) => (
-              <ListItem key={obj.id}>
-                <Box sx={{ width: "100%", mr: 2 }}>
-                  <Typography variant="body1" gutterBottom>
-                    {obj.name}
-                  </Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={obj.progress}
-                    sx={{ height: 10, borderRadius: 5 }}
-                  />
-                </Box>
-                <Typography variant="body1" fontWeight="bold">
-                  {obj.progress}%
-                </Typography>
-              </ListItem>
-            ))
-          ) : (
-            <Typography variant="body1">No objectives found</Typography>
-          )}
-        </List>
-      </Paper>
-
-      <Typography variant="h5" gutterBottom>
-        Activities
-      </Typography>
       <Paper elevation={3} sx={{ p: 2 }}>
         <List>
           {activities.length > 0 ? (
@@ -268,10 +202,7 @@ export default function DeployedIapPage() {
                   </Button>
                 }
               >
-                <ListItemText
-                  primary={act.act_name}
-                  secondary={`Deployment URL: ${act.deployment_url}`}
-                />
+                <ListItemText primary={act.act_name} secondary={"60%"} />
               </ListItem>
             ))
           ) : (

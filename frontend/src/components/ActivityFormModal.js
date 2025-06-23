@@ -76,7 +76,7 @@ const ActivityFormModal = ({
       <Form onSubmit={handleSubmit}>
         <Modal.Body
           className="d-flex flex-column"
-          style={{ overflowY: "auto", height: "calc(90vh - 162px)" }}
+          style={{ overflowY: "auto", height: "calc(55vh - 162px)" }}
         >
           <div className="flex-grow-1" style={{ overflowY: "auto" }}>
             <Form.Group className="mb-3">
@@ -119,42 +119,6 @@ const ActivityFormModal = ({
               >
                 Add Property
               </Button>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Config URL</Form.Label>
-              <Form.Control
-                name="config_url"
-                value={localFormData.config_url}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>JSON Params</Form.Label>
-              <Form.Control
-                name="json_params"
-                value={localFormData.json_params}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>User URL</Form.Label>
-              <Form.Control
-                name="user_url"
-                value={localFormData.user_url}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Analytics</Form.Label>
-              <Form.Control
-                name="analytics"
-                value={localFormData.analytics}
-                onChange={handleInputChange}
-              />
             </Form.Group>
           </div>
 

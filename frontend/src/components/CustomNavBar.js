@@ -56,7 +56,7 @@ const CustomNavBar = () => {
                 color: "#fff",
               }}
             >
-              ActHub
+              Inven!RA
             </Link>
           </Navbar.Brand>
         </>
@@ -72,7 +72,7 @@ const CustomNavBar = () => {
                 color: "#fff",
               }}
             >
-              ActHub
+              Inven!RA
             </Link>
           </Navbar.Brand>
         </>

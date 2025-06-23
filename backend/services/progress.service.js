@@ -23,6 +23,10 @@ module.exports = {
 	},
 
 	actions: {
+		///////////////////////////////
+		//Actions needed to implement//
+
+		///////
 		async recordProgress(ctx) {
 			const { activity_id, progress } = ctx.params;
 
@@ -52,18 +56,6 @@ module.exports = {
 							type: Sequelize.QueryTypes.UPDATE,
 						}
 					);
-				} else {
-					// Insert new record
-					await this.sequelize.query(
-						`INSERT INTO invenirabd.analytics 
-                         (activity_id, name, score)
-                         VALUES (:activity_id, 'Activity Progress', :progress)`,
-						{
-							replacements: { activity_id, progress },
-							transaction,
-							type: Sequelize.QueryTypes.INSERT,
-						}
-					);
 				}
 
 				await transaction.commit();
@@ -77,6 +69,28 @@ module.exports = {
 		},
 
 		async getActivityProgress(ctx) {
+			const { activity_id } = ctx.params;
+
+			try {
+				const [result] = await this.sequelize.query(
+					`SELECT score FROM invenirabd.analytics 
+                     WHERE activity_id = :activity_id`,
+					{
+						replacements: { activity_id },
+						type: Sequelize.QueryTypes.SELECT,
+					}
+				);
+
+				return result ? result.score : 0;
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to get activity progress: ${error.message}`,
+					500
+				);
+			}
+		},
+
+		async getAllAnalytics(ctx) {
 			const { activity_id } = ctx.params;
 
 			try {

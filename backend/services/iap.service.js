@@ -247,7 +247,7 @@ module.exports = {
 				if (activityIds.length === 0) return [];
 
 				const [analytics] = await this.adapter.db.query(`
-					SELECT a.id, a.name, a.activity_id 
+					SELECT a.id, a.name, a.activity_id, a.score 
 					FROM invenirabd.analytics a
 					WHERE activity_id IN (${activityIds.join(",")})
 				  `);
