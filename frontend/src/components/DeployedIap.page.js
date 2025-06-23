@@ -61,6 +61,27 @@ export default function DeployedIapPage() {
         if (!actRes.ok) throw new Error("Failed to fetch activities");
         const actData = await actRes.json();
         setActivities(Array.isArray(actData) ? actData : []);
+
+        if (user) {
+          const progressRes = await fetch(
+            `${API_BASE_URL}/progress_all?user_id=${user.id}&deployed_iap_id=${id}`
+          );
+          if (progressRes.ok) {
+            const progressData = await progressRes.json();
+
+            console.log(progressData);
+            // Convert array to object: { activity_id: score }
+            const progressObj = {};
+            if (Array.isArray(progressData)) {
+              progressData.forEach((item) => {
+                progressObj[item.activity_id] = item.score;
+              });
+            }
+
+            console.log(progressObj);
+            setActivityProgress(progressObj);
+          }
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
         setError(error.message);
@@ -70,7 +91,7 @@ export default function DeployedIapPage() {
     };
 
     fetchData();
-  }, [id]);
+  }, [id, user]);
 
   const handleOpenActivity = (activity) => {
     setSelectedActivity(activity);
@@ -83,6 +104,7 @@ export default function DeployedIapPage() {
     setSaveDisabled(false);
   };
 
+  ////////////////////////////////////////
   const handleSaveProgress = async () => {
     if (!user || !selectedActivity) return;
 
@@ -93,9 +115,9 @@ export default function DeployedIapPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: user.id,
-          activity_id: selectedActivity.activity_id,
           deployed_iap_id: id,
-          progress: progressValue,
+          activity_id: selectedActivity.activity_id,
+          score: progressValue,
         }),
       });
 
@@ -114,6 +136,8 @@ export default function DeployedIapPage() {
       alert(`Error: ${error.message}`);
     }
   };
+
+  ///////////////////////////////////////////////////////
 
   if (loading) {
     return (
@@ -142,6 +166,16 @@ export default function DeployedIapPage() {
 
   if (!deployedIap) {
     return <Typography variant="h6">Deployed IAP not found</Typography>;
+  }
+
+  if (!user) {
+    return (
+      <Box sx={{ p: 3, textAlign: "center", mt: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          Please login to access this IAP
+        </Typography>
+      </Box>
+    );
   }
 
   return (
@@ -202,7 +236,10 @@ export default function DeployedIapPage() {
                   </Button>
                 }
               >
-                <ListItemText primary={act.act_name} secondary={"60%"} />
+                <ListItemText
+                  primary={act.act_name}
+                  secondary={`${activityProgress[act.activity_id] || 0}%`}
+                />
               </ListItem>
             ))
           ) : (

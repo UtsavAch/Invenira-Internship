@@ -168,10 +168,6 @@ const MyActivities = () => {
     setError(null);
   };
 
-  const handleActivityInfo = (id) => {
-    navigate(`/activity_info/${id}`);
-  };
-
   const handleDeployActivity = async (analyticsList) => {
     try {
       const response = await fetch(
@@ -271,20 +267,6 @@ const MyActivities = () => {
                       <h5>{activity.name}</h5>
                     </div>
                     <div style={{ display: "flex", gap: "10px" }}>
-                      <Button
-                        variant="none"
-                        size="sm"
-                        className="me-2"
-                        onClick={() => handleActivityInfo(activity.id)}
-                        style={{
-                          width: "30px",
-                          height: "30px",
-                          background: "#ccc",
-                          borderRadius: "100%",
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faInfo} />
-                      </Button>
                       <Button
                         variant="success"
                         size="sm"

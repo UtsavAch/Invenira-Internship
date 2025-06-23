@@ -289,18 +289,12 @@ module.exports = {
 
 			// Validate activity URLs
 			const nodes = iap.nodes || [];
-			const missingUrls = nodes.filter(
+			//const missingUrls =
+			nodes.filter(
 				(node) =>
 					!(activityUrls[node.id] && activityUrls[node.id].trim()) ||
 					!Number.isInteger(node.id)
 			);
-
-			if (missingUrls.length > 0) {
-				throw new MoleculerError(
-					"All activities must have valid deployment URLs",
-					400
-				);
-			}
 
 			// Create deployed_iaps entry
 			const [deployedIap] = await this.adapter.db.query(`
@@ -327,7 +321,7 @@ module.exports = {
 						${deployedIap[0].id},
 						${node.id},
 						'${node.name.replace(/'/g, "''")}',
-						'${activityUrls[node.id].replace(/'/g, "''")}'
+						'${""}'
 					)
 				`);
 			}

@@ -16,6 +16,7 @@ DROP TABLE IF EXISTS activity_connections CASCADE;
 DROP TABLE IF EXISTS models CASCADE;
 DROP TABLE IF EXISTS activity CASCADE;
 DROP TABLE IF EXISTS deployed_iaps CASCADE;
+DROP TABLE IF EXISTS scores CASCADE;
 
 
 DROP TRIGGER IF EXISTS activity_search_update_trigger ON activities CASCADE;
@@ -122,12 +123,13 @@ CREATE TABLE objective_analytics(
 CREATE TABLE IF NOT EXISTS scores (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
-    analytics_id INTEGER NOT NULL,
-    objective_id INTEGER NOT NULL,
+    deployed_iap_id INTEGER NOT NULL,
+    activity_id INTEGER NOT NULL,
     score INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (analytics_id) REFERENCES analytics(id),
-    FOREIGN KEY (objective_id) REFERENCES objective(id)
+    FOREIGN KEY (deployed_iap_id_id) REFERENCES deployed_iaps(id),
+    FOREIGN KEY (activity_id_id) REFERENCES activities(id)
+    -- UNIQUE (user_id, deployed_iap_id, activity_id)
 );
 
 --triggers

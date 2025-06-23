@@ -81,10 +81,6 @@ const Store = () => {
     activity.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleActivityInfo = (id) => {
-    navigate(`/activity-info/${id}`);
-  };
-
   const handleIapInfo = (id) => {
     navigate(`/iap-info/${id}`);
   };
@@ -286,19 +282,6 @@ const Store = () => {
                         <h5>{activity.name}</h5>
                       </div>
                       <div style={{ display: "flex", gap: "10px" }}>
-                        <Button
-                          variant="none"
-                          size="sm"
-                          onClick={() => handleActivityInfo(activity.id)}
-                          style={{
-                            width: "30px",
-                            height: "30px",
-                            background: "#ccc",
-                            borderRadius: "100%",
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faInfo} />
-                        </Button>
                         {user && (
                           <div>
                             {activity.is_owner ? (

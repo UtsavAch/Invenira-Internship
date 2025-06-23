@@ -12,12 +12,11 @@ const broker = new ServiceBroker({
 });
 
 broker.loadService("../../backend/services/activity_connections.service.js");
-broker.loadService("../../backend/services/progress.service.js");
+broker.loadService("../../backend/services/scores.service.js");
 broker.loadService("../../backend/services/users.service.js");
 broker.loadService("../../backend/services/activity.service.js");
 broker.loadService("../../backend/services/iap.service.js");
 broker.loadService("../../backend/services/deployed_iaps.service.js");
-broker.loadService("../../backend/services/analytics.service.js");
 
 // Start the broker
 broker.start().then(() => {
@@ -310,15 +309,6 @@ app.delete("/iaps/:id", async (req, res) => {
   }
 });
 
-// app.delete("/iaps/:id", async (req, res) => {
-//   try {
-//     await broker.call("iap.remove", { id: req.params.id });
-//     res.json({ message: "IAP deleted successfully" });
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
-
 // Get analytics for IAP's activities
 app.get("/iaps/:id/analytics", async (req, res) => {
   try {
@@ -358,22 +348,6 @@ app.get("/activity-connections", async (req, res) => {
 
 /////////////////////////////////////
 ///////////HANDLING DEPLOYED IAPS///////////////////////
-// app.get("/deployed-iaps", async (req, res) => {
-//   try {
-//     const user_id = req.query.user_id;
-//     let deployed_iaps;
-//     if (user_id) {
-//       deployed_iaps = await broker.call("deployed_iaps.getByUserId", {
-//         user_id,
-//       });
-//     } else {
-//       deployed_iaps = await broker.call("deployed_iaps.getAllDeployedIaps");
-//     }
-//     res.json(deployed_iaps);
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
 
 app.get("/deployed-iaps", async (req, res) => {
   try {
@@ -436,64 +410,36 @@ app.get("/deployed-iaps/:id/activities", async (req, res) => {
   }
 });
 
-/////////////////////////////////////////////////////
-// Activity Progress
-// app.post("/progress", async (req, res) => {
-//   try {
-//     const result = await broker.call("progress.recordProgress", req.body);
-//     res.json(result);
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
+///////////////////////////////
+app.post("/progress", async (req, res) => {
+  try {
+    const result = await broker.call("scores.recordProgress", req.body);
+    res.json(result);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
 
-// app.get("/activity-progress", async (req, res) => {
+// app.get("/progress", async (req, res) => {
 //   try {
-//     const { user_id, activity_id } = req.query;
-//     const progress = await broker.call("progress.getActivityProgress", {
-//       user_id,
-//       activity_id,
+//     const progress = await broker.call("scores.getActivityProgress", {
+//       user_id: req.query.user_id,
+//       deployed_iap_id: req.query.deployed_iap_id,
+//       activity_id: req.query.activity_id,
 //     });
 //     res.json({ progress });
 //   } catch (error) {
 //     handleError(res, error);
 //   }
 // });
-
-// app.get("/deployed-iaps/:id/objectives-progress", async (req, res) => {
-//   try {
-//     const progress = await broker.call("progress.getObjectiveProgress", {
-//       deployed_iap_id: req.params.id,
-//       user_id: req.query.user_id,
-//     });
-//     res.json(progress);
-//   } catch (error) {
-//     handleError(res, error);
-//   }
-// });
-
-/////////////////////////////////////////////////////
-app.get("/iaps/:iap_id/analytics", async (req, res) => {
+app.get("/progress_all", async (req, res) => {
   try {
-    const analytics = await broker.call("analytics.getAnalytics", {
-      iap_id: req.params.iap_id,
+    const progress = await broker.call("scores.getDeployedIapProgress", {
       user_id: req.query.user_id,
+      deployed_iap_id: req.query.deployed_iap_id,
+      //activity_id: req.query.activity_id,
     });
-    res.json(analytics);
-  } catch (error) {
-    handleError(res, error);
-  }
-});
-
-// Update analytics score
-app.put("/analytics/:id", async (req, res) => {
-  try {
-    const result = await broker.call("analytics.setAnalyticsScore", {
-      analytics_id: req.params.id,
-      score: req.body.score,
-      user_id: req.body.user_id,
-    });
-    res.json(result);
+    res.json(progress);
   } catch (error) {
     handleError(res, error);
   }

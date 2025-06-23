@@ -141,3 +141,73 @@ module.exports = {
 		},
 	},
 };
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+// Activity Progress
+// app.post("/progress", async (req, res) => {
+//   try {
+//     const result = await broker.call("progress.recordProgress", req.body);
+//     res.json(result);
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
+
+// app.get("/activity-progress", async (req, res) => {
+//   try {
+//     const { user_id, activity_id } = req.query;
+//     const progress = await broker.call("progress.getActivityProgress", {
+//       user_id,
+//       activity_id,
+//     });
+//     res.json({ progress });
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
+
+// app.get("/deployed-iaps/:id/objectives-progress", async (req, res) => {
+//   try {
+//     const progress = await broker.call("progress.getObjectiveProgress", {
+//       deployed_iap_id: req.params.id,
+//       user_id: req.query.user_id,
+//     });
+//     res.json(progress);
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
+
+/////////////////////////////////////////////////////
+// app.get("/iaps/:iap_id/analytics", async (req, res) => {
+//   try {
+//     const analytics = await broker.call("analytics.getAnalytics", {
+//       iap_id: req.params.iap_id,
+//       user_id: req.query.user_id,
+//     });
+//     res.json(analytics);
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
+
+// // Update analytics score
+// app.put("/analytics/:id", async (req, res) => {
+//   try {
+//     const result = await broker.call("analytics.setAnalyticsScore", {
+//       analytics_id: req.params.id,
+//       score: req.body.score,
+//       user_id: req.body.user_id,
+//     });
+//     res.json(result);
+//   } catch (error) {
+//     handleError(res, error);
+//   }
+// });
