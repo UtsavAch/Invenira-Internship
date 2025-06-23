@@ -7,7 +7,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const IapDeployModal = ({ show, onHide, iap, onDeploy, loading }) => {
   const [objectives, setObjectives] = useState([
-    { name: "", analytic_id: "", target: "" },
+    { name: "", analytic_id: "", target: 100 },
   ]);
   const [deployURL, setDeployURL] = useState("");
   const [analyticsOptions, setAnalyticsOptions] = useState([]);
@@ -33,7 +33,10 @@ const IapDeployModal = ({ show, onHide, iap, onDeploy, loading }) => {
   }, [show, iap]);
 
   const addObjective = () => {
-    setObjectives([...objectives, { name: "", analytic_type: "", target: "" }]);
+    setObjectives([
+      ...objectives,
+      { name: "", analytic_type: "", target: 100 },
+    ]);
   };
 
   const removeObjective = (index) => {
@@ -47,26 +50,12 @@ const IapDeployModal = ({ show, onHide, iap, onDeploy, loading }) => {
     setObjectives(newObjectives);
   };
 
-  const handleActivityUrlChange = (activityId, value) => {
-    setActivityUrls((prev) => ({
-      ...prev,
-      [activityId]: value,
-    }));
-  };
-
   const handleSubmit = () => {
-    const missingUrls = iap?.nodes?.filter((node) => !activityUrls[node.id]);
     if (!deployURL) {
       setError("Deploy URL is required");
       return;
     }
-    if (missingUrls?.length > 0) {
-      setError("All activities must have a deployment URL");
-      return;
-    }
-    if (
-      objectives.some((obj) => !obj.name || !obj.analytic_id || !obj.target)
-    ) {
+    if (objectives.some((obj) => !obj.name || !obj.analytic_id)) {
       setError("All objective fields are required");
       return;
     }
@@ -130,44 +119,10 @@ const IapDeployModal = ({ show, onHide, iap, onDeploy, loading }) => {
                   ))}
                 </Form.Control>
               </Col>
-              <Col>
-                <Form.Control
-                  type="number"
-                  placeholder="Target"
-                  value={obj.target}
-                  onChange={(e) =>
-                    handleObjectiveChange(index, "target", e.target.value)
-                  }
-                />
-              </Col>
               <Col xs="auto">
                 <Button variant="danger" onClick={() => removeObjective(index)}>
                   <FontAwesomeIcon icon={faTimes} />
                 </Button>
-              </Col>
-            </Row>
-          ))}
-        </Form.Group>
-        <Form.Group className="mb-4">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5>Activity Deployment URLs</h5>
-          </div>
-
-          {iap?.nodes?.map((node) => (
-            <Row key={node.id} className="mb-3">
-              <Col md={4}>
-                <Form.Label>{node.name}</Form.Label>
-              </Col>
-              <Col md={6}>
-                <Form.Control
-                  type="text"
-                  placeholder="Deployment URL"
-                  value={activityUrls[node.id] || ""}
-                  onChange={(e) =>
-                    handleActivityUrlChange(node.id, e.target.value)
-                  }
-                  required
-                />
               </Col>
             </Row>
           ))}
