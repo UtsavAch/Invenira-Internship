@@ -249,16 +249,16 @@ module.exports = {
 
 				// Get all users who have scores for this deployed IAP
 				const [userScores] = await this.adapter.db.query(`
-		SELECT 
-		  u.id AS user_id,
-		  u.name AS user_name,
-		  jsonb_object_agg(s.activity_id, s.score) AS scores,
-		  COALESCE(SUM(s.score), 0) AS total
-		FROM invenirabd.scores s
-		JOIN invenirabd.users u ON s.user_id = u.id
-		WHERE s.deployed_iap_id = ${id}
-		GROUP BY u.id, u.name
-	  `);
+					SELECT 
+					  u.id AS user_id,
+					  u.name AS user_name,
+					  jsonb_object_agg(s.activity_id, s.score) AS scores,
+					  COALESCE(AVG(s.score), 0) AS average
+					FROM invenirabd.scores s
+					JOIN invenirabd.users u ON s.user_id = u.id
+					WHERE s.deployed_iap_id = ${id}
+					GROUP BY u.id, u.name
+				`);
 
 				return userScores;
 			} catch (error) {

@@ -12,7 +12,6 @@ import {
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faInfo, faPlus } from "@fortawesome/free-solid-svg-icons";
-import { useNavigate } from "react-router-dom";
 import StatisticsOverlay from "../components/StatisticsOverlay";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -28,7 +27,6 @@ const Store = () => {
     open: false,
     iapId: null,
   });
-  const navigate = useNavigate();
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -227,19 +225,6 @@ const Store = () => {
                           gap: "10px",
                         }}
                       >
-                        <Button
-                          variant="none"
-                          size="sm"
-                          onClick={() => handleIapInfo(iap.id)}
-                          style={{
-                            width: "30px",
-                            height: "30px",
-                            background: "#ccc",
-                            borderRadius: "100%",
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faInfo} />
-                        </Button>
                         {user && !iap.is_added && !iap.is_owner && (
                           <Button
                             variant="primary"
@@ -256,6 +241,19 @@ const Store = () => {
                         {iap.is_added && !iap.is_owner && (
                           <span className="text-muted me-2">Added</span>
                         )}
+                        <Button
+                          variant="none"
+                          size="sm"
+                          onClick={() => handleIapInfo(iap.id)}
+                          style={{
+                            width: "30px",
+                            height: "30px",
+                            background: "#ccc",
+                            borderRadius: "100%",
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faInfo} />
+                        </Button>
                       </div>
                     </ListGroup.Item>
                   ))

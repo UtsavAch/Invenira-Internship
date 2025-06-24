@@ -10,8 +10,10 @@ import {
   Paper,
   Button,
 } from "@mui/material";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import PersonalInfo from "../components/PersonalInfo";
+import StatisticsOverlay from "../components/StatisticsOverlay";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 export default function ProfilePage() {
@@ -20,6 +22,10 @@ export default function ProfilePage() {
   const [deployedIaps, setDeployedIaps] = useState([]);
   const [iapLoading, setIapLoading] = useState(false);
   const [activitiesAdded, setActivitiesAdded] = useState([]);
+  const [statisticsOverlay, setStatisticsOverlay] = useState({
+    open: false,
+    iapId: null,
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -93,6 +99,14 @@ export default function ProfilePage() {
     );
   }
 
+  const handleIapInfo = (id) => {
+    setStatisticsOverlay({ open: true, iapId: id });
+  };
+
+  const handleCloseStatistics = () => {
+    setStatisticsOverlay({ open: false, iapId: null });
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
       <Box
@@ -140,6 +154,19 @@ export default function ProfilePage() {
                       onClick={() => navigate(`/deployed-iaps/${iap.id}`)}
                     >
                       Start
+                    </Button>
+                    <Button
+                      variant="none"
+                      size="small"
+                      className="me-2"
+                      onClick={() => handleIapInfo(iap.id)}
+                      style={{
+                        width: "30px",
+                        height: "30px",
+                        background: "#ccc",
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faInfo} />
                     </Button>
                   </Box>
                 </ListItem>
@@ -189,6 +216,11 @@ export default function ProfilePage() {
       >
         <PersonalInfo />
       </Box>
+      <StatisticsOverlay
+        iapId={statisticsOverlay.iapId}
+        open={statisticsOverlay.open}
+        onClose={handleCloseStatistics}
+      />
     </Box>
   );
 }

@@ -16,19 +16,16 @@ const StatisticsOverlay = ({ iapId, open, onClose }) => {
         setLoading(true);
         setError(null);
 
-        // Fetch deployed IAP details
         const iapRes = await fetch(`${API_BASE_URL}/deployed-iaps/${iapId}`);
         if (!iapRes.ok) throw new Error("Failed to fetch IAP details");
         const iapData = await iapRes.json();
 
-        // Fetch activities
         const activitiesRes = await fetch(
           `${API_BASE_URL}/deployed-iaps/${iapId}/activities`
         );
         if (!activitiesRes.ok) throw new Error("Failed to fetch activities");
         const activitiesData = await activitiesRes.json();
 
-        // Fetch user statistics
         const statsRes = await fetch(
           `${API_BASE_URL}/deployed-iaps/${iapId}/statistics`
         );
@@ -84,9 +81,9 @@ const StatisticsOverlay = ({ iapId, open, onClose }) => {
           <Button
             variant="secondary"
             onClick={onClose}
-            style={{ padding: "5px 10px" }}
+            style={{ padding: "5px 10px", fontWeight: "bold" }}
           >
-            Close
+            X
           </Button>
         </div>
 
@@ -111,26 +108,74 @@ const StatisticsOverlay = ({ iapId, open, onClose }) => {
 
         {statistics && !loading && (
           <div className="table-responsive">
-            <table className="table table-bordered table-hover">
-              <thead className="table-dark">
+            <table
+              className="table table-bordered"
+              style={{ borderCollapse: "collapse", width: "100%" }}
+            >
+              <thead>
                 <tr>
-                  <th>User</th>
+                  <th
+                    style={{
+                      backgroundColor: "#eaeaea",
+                      fontWeight: "bold",
+                      color: "#000",
+                      border: "1px solid #dee2e6",
+                    }}
+                  >
+                    User
+                  </th>
                   {statistics.activities.map((activity) => (
-                    <th key={activity.activity_id}>{activity.act_name}</th>
+                    <th
+                      key={activity.activity_id}
+                      style={{
+                        backgroundColor: "#eaeaea",
+                        fontWeight: "bold",
+                        color: "#000",
+                        border: "1px solid #dee2e6",
+                      }}
+                    >
+                      {activity.act_name}
+                    </th>
                   ))}
-                  <th>Total</th>
+                  <th
+                    style={{
+                      backgroundColor: "#eaeaea",
+                      fontWeight: "bold",
+                      color: "#000",
+                      border: "1px solid #dee2e6",
+                    }}
+                  >
+                    Average
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {statistics.userScores.map((userScore) => (
-                  <tr key={userScore.user_id}>
-                    <td>{userScore.user_name}</td>
+                {statistics.userScores.map((userScore, index) => (
+                  <tr
+                    key={userScore.user_id}
+                    style={{
+                      backgroundColor: index % 2 === 0 ? "#ffffff" : "#f9f9f9",
+                    }}
+                  >
+                    <td style={{ border: "1px solid #dee2e6" }}>
+                      {userScore.user_name}
+                    </td>
                     {statistics.activities.map((activity) => (
-                      <td key={`${userScore.user_id}-${activity.activity_id}`}>
+                      <td
+                        key={`${userScore.user_id}-${activity.activity_id}`}
+                        style={{ border: "1px solid #dee2e6" }}
+                      >
                         {userScore.scores[activity.activity_id] || 0}%
                       </td>
                     ))}
-                    <td style={{ fontWeight: "bold" }}>{userScore.total}%</td>
+                    <td
+                      style={{
+                        fontWeight: "bold",
+                        border: "1px solid #dee2e6",
+                      }}
+                    >
+                      {parseFloat(userScore.average).toFixed(2)}%
+                    </td>
                   </tr>
                 ))}
               </tbody>

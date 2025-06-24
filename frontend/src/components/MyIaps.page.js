@@ -15,9 +15,7 @@ import {
   faPlus,
   faSearch,
   faPlay,
-  faInfo,
 } from "@fortawesome/free-solid-svg-icons";
-import { useNavigate } from "react-router-dom";
 import IapFormModal from "./IapFormModal";
 import { UserContext } from "../contexts/user.context";
 import IapDeployModal from "./IapDeployModal";
@@ -31,7 +29,6 @@ const MyIaps = () => {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [currentIap, setCurrentIap] = useState(null);
-  const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [selectedIap, setSelectedIap] = useState(null);
@@ -186,10 +183,6 @@ const MyIaps = () => {
     }
   };
 
-  const handleIapInfo = (id) => {
-    navigate(`/deploy-iap/${id}`);
-  };
-
   return (
     <Container className="mt-4">
       <Navbar bg="light" className="mb-4 p-3 rounded">
@@ -260,20 +253,6 @@ const MyIaps = () => {
                       <h5>{iap.name}</h5>
                     </div>
                     <div style={{ display: "flex", gap: "10px" }}>
-                      <Button
-                        variant="none"
-                        size="sm"
-                        className="me-2"
-                        onClick={() => handleIapInfo(iap.id)}
-                        style={{
-                          width: "30px",
-                          height: "30px",
-                          background: "#ccc",
-                          borderRadius: "100%",
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faInfo} />
-                      </Button>
                       <Button
                         variant="success"
                         size="sm"
