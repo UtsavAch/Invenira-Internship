@@ -13,6 +13,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faInfo, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
+import StatisticsOverlay from "../components/StatisticsOverlay";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -23,6 +24,10 @@ const Store = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statisticsOverlay, setStatisticsOverlay] = useState({
+    open: false,
+    iapId: null,
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,7 +87,11 @@ const Store = () => {
   );
 
   const handleIapInfo = (id) => {
-    navigate(`/iap-info/${id}`);
+    setStatisticsOverlay({ open: true, iapId: id });
+  };
+
+  const handleCloseStatistics = () => {
+    setStatisticsOverlay({ open: false, iapId: null });
   };
 
   const handleAddActivity = async (activityId) => {
@@ -312,6 +321,11 @@ const Store = () => {
           </Card>
         </>
       )}
+      <StatisticsOverlay
+        iapId={statisticsOverlay.iapId}
+        open={statisticsOverlay.open}
+        onClose={handleCloseStatistics}
+      />
     </Container>
   );
 };

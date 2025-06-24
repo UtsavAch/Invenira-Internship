@@ -129,7 +129,6 @@ CREATE TABLE IF NOT EXISTS scores (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (deployed_iap_id_id) REFERENCES deployed_iaps(id),
     FOREIGN KEY (activity_id_id) REFERENCES activities(id)
-    -- UNIQUE (user_id, deployed_iap_id, activity_id)
 );
 
 --triggers

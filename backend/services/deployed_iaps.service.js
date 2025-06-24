@@ -236,5 +236,37 @@ module.exports = {
 			const [activities] = await this.adapter.db.query(query);
 			return activities;
 		},
+
+		async getStatistics(ctx) {
+			const { id } = ctx.params;
+
+			try {
+				// Get all activities in this deployed IAP using the action
+				const activities = await ctx.call(
+					"deployed_iaps.getActivities",
+					{ id }
+				);
+
+				// Get all users who have scores for this deployed IAP
+				const [userScores] = await this.adapter.db.query(`
+		SELECT 
+		  u.id AS user_id,
+		  u.name AS user_name,
+		  jsonb_object_agg(s.activity_id, s.score) AS scores,
+		  COALESCE(SUM(s.score), 0) AS total
+		FROM invenirabd.scores s
+		JOIN invenirabd.users u ON s.user_id = u.id
+		WHERE s.deployed_iap_id = ${id}
+		GROUP BY u.id, u.name
+	  `);
+
+				return userScores;
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to get statistics: ${error.message}`,
+					500
+				);
+			}
+		},
 	},
 };

@@ -410,6 +410,18 @@ app.get("/deployed-iaps/:id/activities", async (req, res) => {
   }
 });
 
+// Add this endpoint in server.js
+app.get("/deployed-iaps/:id/statistics", async (req, res) => {
+  try {
+    const statistics = await broker.call("deployed_iaps.getStatistics", {
+      id: req.params.id,
+    });
+    res.json(statistics);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
 ///////////////////////////////
 app.post("/progress", async (req, res) => {
   try {
