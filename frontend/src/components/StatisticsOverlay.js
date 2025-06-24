@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "react-bootstrap";
+import { Button, Form } from "react-bootstrap";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -7,6 +7,8 @@ const StatisticsOverlay = ({ iapId, open, onClose }) => {
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortOption, setSortOption] = useState("name_asc");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!open || !iapId) return;
@@ -46,6 +48,36 @@ const StatisticsOverlay = ({ iapId, open, onClose }) => {
 
     fetchStatistics();
   }, [iapId, open]);
+
+  const getSortedAndFilteredScores = () => {
+    if (!statistics) return [];
+
+    let scores = [...statistics.userScores];
+
+    // Filter by name
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      scores = scores.filter((user) =>
+        user.user_name.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort
+    scores.sort((a, b) => {
+      if (sortOption === "name_asc") {
+        return a.user_name.localeCompare(b.user_name);
+      } else if (sortOption === "average_asc") {
+        return parseFloat(a.average) - parseFloat(b.average);
+      } else if (sortOption === "average_desc") {
+        return parseFloat(b.average) - parseFloat(a.average);
+      }
+      return 0;
+    });
+
+    return scores;
+  };
+
+  const filteredAndSortedScores = getSortedAndFilteredScores();
 
   if (!open) return null;
 
@@ -92,6 +124,34 @@ const StatisticsOverlay = ({ iapId, open, onClose }) => {
           <strong>{statistics?.iap?.name || "IAP Statistics"}</strong>
         </h3>
 
+        {/* Filter and Sort Controls */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: "15px",
+            gap: "10px",
+          }}
+        >
+          <input
+            type="text"
+            placeholder="Search by user name"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ flex: 1, padding: "6px 10px", borderRadius: "5px" }}
+          />
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            style={{ padding: "6px 10px", borderRadius: "5px" }}
+          >
+            <option value="name_asc">Name (A–Z)</option>
+            <option value="average_asc">Average (Low → High)</option>
+            <option value="average_desc">Average (High → Low)</option>
+          </select>
+        </div>
+
+        {/* Loading */}
         {loading && (
           <div style={{ textAlign: "center", margin: "20px 0" }}>
             <div className="spinner-border" role="status">
@@ -100,12 +160,14 @@ const StatisticsOverlay = ({ iapId, open, onClose }) => {
           </div>
         )}
 
+        {/* Error */}
         {error && (
           <div className="alert alert-danger" style={{ marginBottom: "20px" }}>
             Error: {error}
           </div>
         )}
 
+        {/* Table */}
         {statistics && !loading && (
           <div className="table-responsive">
             <table
@@ -150,7 +212,7 @@ const StatisticsOverlay = ({ iapId, open, onClose }) => {
                 </tr>
               </thead>
               <tbody>
-                {statistics.userScores.map((userScore, index) => (
+                {filteredAndSortedScores.map((userScore, index) => (
                   <tr
                     key={userScore.user_id}
                     style={{
