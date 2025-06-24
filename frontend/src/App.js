@@ -10,7 +10,6 @@ import Profile from "./components/Profile.page";
 import MyIaps from "./components/MyIaps.page";
 import MyActivities from "./components/MyActivities.page";
 import Store from "./components/Store.page";
-import UsersManager from "./components/UsersManager.page";
 import DeployedIapPage from "./components/DeployedIap.page";
 
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
@@ -41,7 +40,6 @@ class App extends Component {
           <UserProvider>
             <CustomNavBar />
             <Routes>
-              <Route exact path="/usersManager" element={<UsersManager />} />
               <Route exact path="/" element={<Home />} />
               <Route exact path="/customNavBar" element={<CustomNavBar />} />
               <Route exact path="/edit-iap/:id" element={<this.EditIAP />} />

@@ -137,5 +137,23 @@ module.exports = {
 				);
 			}
 		},
+
+		async deleteByDeployedIapId(ctx) {
+			const { deployed_iap_id } = ctx.params;
+			try {
+				await this.adapter.model.destroy({
+					where: { deployed_iap_id },
+				});
+				return {
+					success: true,
+					message: "Scores deleted successfully",
+				};
+			} catch (error) {
+				throw new MoleculerError(
+					`Failed to delete scores: ${error.message}`,
+					500
+				);
+			}
+		},
 	},
 };

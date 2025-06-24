@@ -204,6 +204,17 @@ module.exports = {
 					WHERE iap_id = ${id}
 				`);
 
+				const [deployedIaps] = await this.adapter.db.query(`
+					SELECT id FROM invenirabd.deployed_iaps
+					WHERE iap_id = ${id}
+				  `);
+
+				for (const deployedIap of deployedIaps) {
+					await ctx.call("scores.deleteByDeployedIapId", {
+						deployed_iap_id: deployedIap.id,
+					});
+				}
+
 				// Delete related deployed IAPs
 				await ctx.call("deployed_iaps.deleteByIapId", {
 					iap_id: id,

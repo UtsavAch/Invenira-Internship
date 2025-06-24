@@ -6,7 +6,7 @@ export default function Home() {
     <div style={styles.wrapper}>
       {/* Hero Section */}
       <section style={styles.hero}>
-        <h1 style={styles.title}>Welcome to ActivityHub</h1>
+        <h1 style={styles.title}>Welcome to Inven!RA</h1>
         <p style={styles.subtitle}>
           Discover, Create, and Share Interactive Learning Experiences
         </p>
@@ -22,7 +22,7 @@ export default function Home() {
 
       {/* Features Section */}
       <section style={styles.features}>
-        <h2 style={styles.featuresTitle}>Why Choose ActivityHub?</h2>
+        <h2 style={styles.featuresTitle}>Why Choose Inven!RA?</h2>
         <div style={styles.featureGrid}>
           <div style={styles.featureBox}>
             <h4 style={styles.featureHeading}>📚 Diverse Activities</h4>
@@ -42,7 +42,7 @@ export default function Home() {
       {/* Call to Action */}
       <section style={styles.cta}>
         <h2>Ready to Get Started?</h2>
-        <p>Join thousands of educators already using ActivityHub</p>
+        <p>Join thousands of educators already using Inven!RA</p>
         <Link to="/signup" style={styles.buttonLight}>
           Create Account
         </Link>
@@ -50,7 +50,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer style={styles.footer}>
-        <p>© 2025 ActivityHub. All rights reserved.</p>
+        <p>© 2025 Inven!RA. All rights reserved.</p>
         <div style={styles.footerLinks}>
           <Link to="/about" style={styles.footerLink}>
             About
