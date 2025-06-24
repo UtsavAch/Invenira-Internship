@@ -14,10 +14,8 @@ import {
   faTrash,
   faPlus,
   faSearch,
-  faInfo,
   faPlay,
 } from "@fortawesome/free-solid-svg-icons";
-import { useNavigate } from "react-router-dom";
 import ActivityFormModal from "./ActivityFormModal";
 import AnalyticsDeployModal from "./AnalyticsDeployModal";
 import { UserContext } from "../contexts/user.context";
@@ -31,7 +29,6 @@ const MyActivities = () => {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [currentActivity, setCurrentActivity] = useState(null);
-  const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState(null);

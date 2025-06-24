@@ -104,7 +104,6 @@ export default function PersonalInfo() {
         throw new Error("Incorrect current password.");
       }
 
-      // If verification successful, proceed with password change
       const response = await fetch(`${API_BASE_URL}/users/${user.id}`, {
         method: "PUT",
         headers: {

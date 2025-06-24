@@ -51,7 +51,7 @@ const MyIaps = () => {
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch IAPs");
-        setIaps([]); // Set empty array on error
+        setIaps([]);
         setLoading(false);
       }
     };
@@ -106,7 +106,7 @@ const MyIaps = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ user_id: user?.id }), // Include user ID
+        body: JSON.stringify({ user_id: user?.id }),
       });
 
       if (!response.ok) {

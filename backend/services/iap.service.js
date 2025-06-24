@@ -120,7 +120,6 @@ module.exports = {
 
 		async update(ctx) {
 			try {
-				// Correct destructuring to include edges and nodes in updateData
 				const { id, user_id, ...updateData } = ctx.params;
 
 				const [ownership] = await this.adapter.db.query(
@@ -166,7 +165,6 @@ module.exports = {
 
 				const iap = await this.adapter.model.findOne({ where: { id } });
 				if (!iap) throw new MoleculerError("IAP not found", 404);
-				// Update the IAP with all data, including edges and nodes
 				await iap.update(updateData);
 				return iap;
 			} catch (error) {

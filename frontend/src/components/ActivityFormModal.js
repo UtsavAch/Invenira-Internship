@@ -27,7 +27,7 @@ const ActivityFormModal = ({
   const updatePairsAndProperties = (newPairs) => {
     setKeyValuePairs(newPairs);
     const properties = newPairs.reduce((acc, { key, value }) => {
-      if (key.trim()) acc[key] = value; // Ignore empty keys
+      if (key.trim()) acc[key] = value;
       return acc;
     }, {});
     setLocalFormData((prev) => ({ ...prev, properties }));
